@@ -163,6 +163,10 @@ int main(int argc, char** argv )
 
 
   // video feed has terminated
+  // -------------------- TASK 3 --------------------
+
+
+  //
   int ddd = waitKey();
   std::cout << ddd << std::endl;
 
