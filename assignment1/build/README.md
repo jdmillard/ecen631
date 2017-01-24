@@ -1,6 +1,6 @@
 Build and Run
 ---
-This assignment demonstrates live video feed, implementation of feature functions, and camera calibration. Use `n` and `p` to cycle through functions which are displayed in the second gui window. `esc` will exit.
+This assignment demonstrates live video feed, implementation of feature functions, and camera calibration. Use `n` and `p` to cycle through functions which are displayed in the second gui window. `esc` will end the video feed portion and move to task 3. Also, if the webcam has errors or is not detected, the video feed portion is automatically skipped and transitions to task 3.
 
 
 From the build directory, these commands should build and run a given assignment:
