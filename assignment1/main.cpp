@@ -9,6 +9,16 @@ int main(int argc, char** argv )
 {
   VideoCapture video(0);    // get a camera object
 
+
+
+
+  VideoWriter VOut; // Create a video write object.
+  // Initialize video write object (only done once). Change frame size to match your camera resolution.
+  VOut.open("VideoOut.avi", CV_FOURCC('M', 'P', 'E', 'G') , 30, Size(640, 480), 1);
+  //VOut.open("VideoOut.avi", -1 , 30, Size(640, 480), 1); // use this if you don’t have the correct codec
+
+
+
   // attempt video access, and print relevant information to screen
   if (!video.isOpened())
   {
@@ -52,6 +62,7 @@ int main(int argc, char** argv )
     else if (type==2) // FUNCTION 2 - CANNY EDGE DETECTION
     {
       Canny(frame, frame_out, 175, 220);
+      cvtColor(frame_out, frame_out, CV_GRAY2BGR);
     }
     else if (type==3) // FUNCTION 3 - CORNER
     {
@@ -63,7 +74,6 @@ int main(int argc, char** argv )
 
       normalize(frame_out, frame_out, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
       convertScaleAbs(frame_out, frame_out);
-
     }
     else if (type==4) // FUNCTION 4 - HOUGH LINE DETECTION
     {
@@ -73,6 +83,9 @@ int main(int argc, char** argv )
       // initialize a vector of lines and detect them using result of canny
       std::vector<Vec2f> lines;
       HoughLines(frame_out, lines, 1, CV_PI/180, 150, 0, 0);
+
+      // reset frame_out to original feed
+      frame_out = frame.clone();
 
       // cycle through each line, find two defining points, and add to image
       for( size_t i = 0; i < lines.size(); i++ )
@@ -85,26 +98,22 @@ int main(int argc, char** argv )
           pt1.y = cvRound(y0 + 1000*(a));
           pt2.x = cvRound(x0 - 1000*(-b));
           pt2.y = cvRound(y0 - 1000*(a));
-          line( frame, pt1, pt2, Scalar(255,0,0), 3, CV_AA);
+          line( frame_out, pt1, pt2, Scalar(255,0,0), 3, CV_AA);
         }
-        frame_out = frame.clone();
 
     }
     else if (type==5) // FUNCTION 5 - DIFFERENCE IMAGES
     {
       // frame is current frame
       // frame_d1 is delayed 1 iteration
-      
+      absdiff(frame, frame_d1, frame_out);
     }
 
 
 
-    //threshold(frame, frame_out, 127, 255,THRESH_BINARY);
-
-
     imshow("Task 1", frame);      // display the grabbed frame
     imshow("Task 2", frame_out);  // display the grabbed frame
-
+    VOut << frame_out;
 
 
 
