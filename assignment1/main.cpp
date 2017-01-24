@@ -1,6 +1,6 @@
-//#include <stdio.h> // from OpenCV introduction, not needed for this
+//#include <stdio.h> // from OpenCV introduction
 #include <opencv2/opencv.hpp>
-//#include <iostream> // not needed
+#include <string> // needed for setting std::strings and using to_string
 
 using namespace cv;
 //using namespace std; // needed for cout/endl (not needed if std:: is used)
@@ -39,7 +39,6 @@ int main(int argc, char** argv )
   // create OpenCV gui windows
   namedWindow("Task 1", CV_WINDOW_AUTOSIZE); // initialize a display window
   namedWindow("Task 2", CV_WINDOW_AUTOSIZE); // initialize a display window
-  namedWindow("Task 3", CV_WINDOW_AUTOSIZE); // initialize a display window
 
 
   // there are various functions to implement, use integers to represent them
@@ -164,11 +163,72 @@ int main(int argc, char** argv )
 
   // video feed has terminated
   // -------------------- TASK 3 --------------------
+  // initialize the image object
+  Mat image;
+  // create OpenCV gui window
+  namedWindow("Task 3", CV_WINDOW_AUTOSIZE); // initialize a display window
+  // image counter (5-40) and specifier (L,R)
+  int n_img = 5;
+  std::string dir = "L", path, n_img_str;
+
+  while(1)
+  {
+    // convert n_img to string, accounting for the 0 in front
+    if (n_img < 10)
+    {
+      n_img_str = "0" + std::to_string(n_img);
+    }
+    else
+    {
+      n_img_str = std::to_string(n_img);
+    }
+    // generate current path
+    path = "../baseball/1" + dir + n_img_str + ".jpg";
+    //std::cout << path << std::endl;
+    // load current image
+    image = imread( path, 1 );
+
+    // test image validity
+    if ( !image.data )
+    {
+        printf("No image data \n");
+        return -1;
+    }
 
 
-  //
-  int ddd = waitKey();
-  std::cout << ddd << std::endl;
+    imshow("Task 3", image);
+
+
+    // wait for a new key input
+    int key = waitKey();
+    if (key == 110)
+    {
+      // the 'n' (next) key was pressed, increment file
+      if (n_img == 40)
+      {
+        // at the last image, switch camera direction and reset counter
+        if (dir == "L")
+        {
+          dir = "R";
+        }
+        else{
+          dir = "L";
+        }
+        n_img = 5;
+      }
+      else
+      {
+        // increment image counter
+        n_img++;
+      }
+    }
+    else if (key == 27)
+    {
+      // the 'esc' key was pressed, end application
+      std::cout << "terminating" << std::endl;
+      break;
+    }
+  }   // end of while loop
 
 
   return 0;
