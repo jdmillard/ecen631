@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project( Assignment1 )
+project( assignment )
 find_package( OpenCV REQUIRED )
-add_executable( Assignment1 main.cpp )
-target_link_libraries( Assignment1 ${OpenCV_LIBS} )
+add_executable( assignment main.cpp )
+target_link_libraries( assignment ${OpenCV_LIBS} )

@@ -8,21 +8,17 @@ using namespace cv;
 int main(int argc, char** argv )
 {
   VideoCapture video(0);    // get a camera object
-
-
-
-
-  VideoWriter VOut; // Create a video write object.
-  // Initialize video write object (only done once). Change frame size to match your camera resolution.
+  VideoWriter VOut;         // Create a video write object.
+  // initialize video write object
   VOut.open("VideoOut.avi", CV_FOURCC('M', 'P', 'E', 'G') , 30, Size(640, 480), 1);
-  //VOut.open("VideoOut.avi", -1 , 30, Size(640, 480), 1); // use this if you don’t have the correct codec
-
+  // alternative syntax if missing codec
+  //VOut.open("VideoOut.avi", -1 , 30, Size(640, 480), 1);
 
 
   // attempt video access, and print relevant information to screen
   if (!video.isOpened())
   {
-    std::cout << "cannot access video" << std::endl;
+    std::cout << "cannot access video, see build readme" << std::endl;
     return -1;
   }
   std::cout << "video access successful" << std::endl;
@@ -31,25 +27,30 @@ int main(int argc, char** argv )
   std::cout << "video dimensions : " << imgW << " x " << imgH << std::endl;
 
 
-  Mat frame;                  // allocate an image buffer object
-  Mat frame_out;              // allocate an image buffer object
-  Mat frame_d1;
-  Mat gray;
+  // initialize data objects of type cv::Mat
+  Mat frame, frame_out, frame_d1, gray;
+
+
+  // create OpenCV gui windows
   namedWindow("Task 1", CV_WINDOW_AUTOSIZE); // initialize a display window
   namedWindow("Task 2", CV_WINDOW_AUTOSIZE); // initialize a display window
 
-  // there are various functions to implement, 0 is no function at all
-  int type = 0;
-  int last_type = 5;
 
-  video >> frame; // this is done in loop, do once here for the *_d1 frame
+  // there are various functions to implement, use integers to represent them
+  int type = 0;       // starting type (plain video)
+  int last_type = 5;  // number of functions to cycle through
 
-  // perform loop of video feed updates
+
+  // perform loop to update the frames from the camera
+  video >> frame; // update once here for the sake of the *_d1 frame
   while (1)
   {
+    // update frames
     frame_d1 = frame.clone();
-    video >> frame;           // grab a frame from the video feed
+    video >> frame;
 
+
+    // perform a function based on "type" variable
     if (type==0)      // STANDARD VIDEO
     {
       // assign output to the standard frame by value using .clone()
@@ -80,14 +81,14 @@ int main(int argc, char** argv )
       // first detect the edges
       Canny(frame, frame_out, 175, 220);
 
-      // initialize a vector of lines and detect them using result of canny
+      // initialize a vector of cv::Vec2f lines (put outside loop)
       std::vector<Vec2f> lines;
       HoughLines(frame_out, lines, 1, CV_PI/180, 150, 0, 0);
 
       // reset frame_out to original feed
       frame_out = frame.clone();
 
-      // cycle through each line, find two defining points, and add to image
+      // cycle through each line, find two defining points, and draw on image
       for( size_t i = 0; i < lines.size(); i++ )
         {
           float rho = lines[i][0], theta = lines[i][1];
@@ -110,19 +111,16 @@ int main(int argc, char** argv )
     }
 
 
-
     imshow("Task 1", frame);      // display the grabbed frame
     imshow("Task 2", frame_out);  // display the grabbed frame
-    VOut << frame_out;
-
+    VOut << frame_out;            // save frame to video file
 
 
     // wait for a few ms, listening for specific keys to determine rotation
     int key = waitKey(30);
     if (key == 110)
     {
-      // the 'n' (next) key was pressed
-      std::cout << "next" << std::endl;
+      // the 'n' (next) key was pressed, increment "type" variable
       if (type == last_type)
       {
         type = 0;
@@ -131,13 +129,10 @@ int main(int argc, char** argv )
       {
         type++;
       }
-
-      std::cout << type << std::endl;
     }
     else if (key == 112)
     {
-      // the 'p' (previous) key was pressed
-      std::cout << "previous" << std::endl;
+      // the 'p' (previous) key was pressed, decrement "type" variable
       if (type == 0)
       {
         type = last_type;
@@ -146,10 +141,16 @@ int main(int argc, char** argv )
       {
         type--;
       }
-      std::cout << type << std::endl;
+    }
+    else if (key == 27)
+    {
+      // the 'esc' key was pressed, end application
+      std::cout << "terminating" << std::endl;
+      break;
     }
 
-  }
+
+  } // end of while loop
 
 
   return 0;
