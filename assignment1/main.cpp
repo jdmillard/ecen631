@@ -206,7 +206,6 @@ int main(int argc, char** argv )
     }
 
     absdiff(image, key_image, image_out);
-    imshow("Task 3", image);
     imshow("Difference", image_out);
 
     cvtColor(image_out, image_out, CV_BGR2GRAY);
@@ -218,6 +217,48 @@ int main(int argc, char** argv )
     Mat element = getStructuringElement( MORPH_RECT, Size( 2*morph_size + 1, 2*morph_size+1 ), Point( morph_size, morph_size ) );
     morphologyEx(image_out, image_out, MORPH_OPEN, element );
     imshow("Open", image_out);
+
+    // initialize params and modify properties
+    SimpleBlobDetector::Params params;
+    // set properties (in this case, disable everything defaults are commented)
+    params.thresholdStep = 10;
+    params.minThreshold = 50;
+    params.maxThreshold = 220;
+    params.minRepeatability = 2;
+    params.minDistBetweenBlobs = 10;
+
+    params.filterByColor = false; // true
+    params.blobColor = 0;
+
+    params.filterByArea = true;
+    params.minArea = 25;
+    params.maxArea = 5000;
+
+    params.filterByCircularity = false;
+    params.minCircularity = 0.8f;
+    params.maxCircularity = std::numeric_limits<float>::max();
+
+    params.filterByInertia = false; // true
+    params.minInertiaRatio = 0.1f;
+    params.maxInertiaRatio = std::numeric_limits<float>::max();
+
+    params.filterByConvexity = false; // true
+    params.minConvexity = 0.95f;
+    params.maxConvexity = std::numeric_limits<float>::max();
+
+
+
+    // initialize keypoints vector
+    std::vector<KeyPoint> keypoints_test;
+
+    // create the detector(pointer) using the params
+    Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
+
+    // use the pointer method 'detect' to populate the vector of keypoints
+    detector->detect( image_out, keypoints_test );
+
+    drawKeypoints(image, keypoints_test, image, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    imshow("Task 3", image);
 
     // wait for a new key input
     int key = waitKey();
