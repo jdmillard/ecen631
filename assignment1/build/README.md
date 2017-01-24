@@ -1,6 +1,8 @@
 Build and Run
 ---
-This assignment demonstrates live video feed, implementation of feature functions, and camera calibration
+This assignment demonstrates live video feed, implementation of feature functions, and camera calibration. Use `n` and `p` to cycle through functions which are displayed in the second gui window. `esc` will exit.
+
+
 From the build directory, these commands should build and run a given assignment:
 ```
 $ cmake .. && make    # build
