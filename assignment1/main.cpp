@@ -168,6 +168,8 @@ int main(int argc, char** argv )
   // create OpenCV gui window
   namedWindow("Task 3", CV_WINDOW_AUTOSIZE); // initialize a display window
   namedWindow("Difference", CV_WINDOW_AUTOSIZE); // initialize a display window
+  namedWindow("Thresh", CV_WINDOW_AUTOSIZE); // initialize a display window
+  namedWindow("Open", CV_WINDOW_AUTOSIZE); // initialize a display window
   // image counter (5-40) and specifier (L,R)
   int n_img = 5;
   std::string dir = "L", path, n_img_str;
@@ -197,7 +199,7 @@ int main(int argc, char** argv )
     }
 
 
-    // when image is the first image, remember it and display it
+    // when image is the first image in the set, remember it
     if (n_img == 5)
     {
       key_image = image.clone();
@@ -207,7 +209,15 @@ int main(int argc, char** argv )
     imshow("Task 3", image);
     imshow("Difference", image_out);
 
+    cvtColor(image_out, image_out, CV_BGR2GRAY);
+    threshold(image_out, image_out, 5, 255, THRESH_BINARY);
+    //adaptiveThreshold(image_out, image_out, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY,15,3);
+    imshow("Thresh", image_out);
 
+    int morph_size = 2;
+    Mat element = getStructuringElement( MORPH_RECT, Size( 2*morph_size + 1, 2*morph_size+1 ), Point( morph_size, morph_size ) );
+    morphologyEx(image_out, image_out, MORPH_OPEN, element );
+    imshow("Open", image_out);
 
     // wait for a new key input
     int key = waitKey();
