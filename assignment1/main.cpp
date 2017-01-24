@@ -164,9 +164,10 @@ int main(int argc, char** argv )
   // video feed has terminated
   // -------------------- TASK 3 --------------------
   // initialize the image object
-  Mat image;
+  Mat image, key_image, image_out;
   // create OpenCV gui window
   namedWindow("Task 3", CV_WINDOW_AUTOSIZE); // initialize a display window
+  namedWindow("Difference", CV_WINDOW_AUTOSIZE); // initialize a display window
   // image counter (5-40) and specifier (L,R)
   int n_img = 5;
   std::string dir = "L", path, n_img_str;
@@ -196,7 +197,16 @@ int main(int argc, char** argv )
     }
 
 
+    // when image is the first image, remember it and display it
+    if (n_img == 5)
+    {
+      key_image = image.clone();
+    }
+
+    absdiff(image, key_image, image_out);
     imshow("Task 3", image);
+    imshow("Difference", image_out);
+
 
 
     // wait for a new key input
