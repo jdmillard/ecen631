@@ -22,15 +22,39 @@ int main(int argc, char** argv )
 
 
   Mat frame;                  // allocate an image buffer object
-  namedWindow("Millard", CV_WINDOW_AUTOSIZE); // initialize a display window
+  Mat frame_out;              // allocate an image buffer object
+  namedWindow("Task 1", CV_WINDOW_AUTOSIZE); // initialize a display window
+  namedWindow("Task 2", CV_WINDOW_AUTOSIZE); // initialize a display window
 
+  int type = 2;
 
   // perform loop of video feed updates
   while (1)
   {
     video >> frame;           // grab a frame from the video feed
-    imshow("Millard", frame); // display the grabbed frame
-    waitKey(1);               // wait for a few ms
+
+    threshold(frame, frame_out, 127, 255,THRESH_BINARY);
+
+
+    imshow("Task 1", frame);      // display the grabbed frame
+    imshow("Task 2", frame_out);  // display the grabbed frame
+
+
+
+
+    // wait for a few ms, listening for specific keys to determine rotation
+    int key = waitKey(30);
+    if (key == 110)
+    {
+      // the 'n' (next) key was pressed
+      std::cout << "next" << std::endl;
+    }
+    else if (key == 112)
+    {
+      // the 'p' (previous) key was pressed
+      std::cout << "previous" << std::endl;
+    }
+
   }
 
 
