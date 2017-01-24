@@ -1,5 +1,6 @@
 Build and Run
 ---
+This assignment demonstrates live video feed, implementation of feature functions, and camera calibration
 From the build directory, these commands should build and run a given assignment:
 ```
 $ cmake .. && make
