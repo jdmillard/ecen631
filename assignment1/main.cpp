@@ -26,14 +26,47 @@ int main(int argc, char** argv )
   namedWindow("Task 1", CV_WINDOW_AUTOSIZE); // initialize a display window
   namedWindow("Task 2", CV_WINDOW_AUTOSIZE); // initialize a display window
 
-  int type = 2;
+  // there are various functions to implement, 0 is no function at all
+  int type = 0;
+  int last_type = 5;
 
   // perform loop of video feed updates
   while (1)
   {
     video >> frame;           // grab a frame from the video feed
 
-    threshold(frame, frame_out, 127, 255,THRESH_BINARY);
+    if (type==0)      // STANDARD VIDEO
+    {
+      // assign output to the standard frame by value using .clone()
+      frame_out = frame.clone();
+    }
+    else if (type==1) // FUNCTION 1 - THRESHOLD
+    {
+      threshold(frame, frame_out, 127, 255, THRESH_BINARY);
+    }
+    else if (type==2) // FUNCTION 2 - CANNY EDGE DETECTION
+    {
+      Canny(frame, frame_out, 175, 220);
+    }
+    else if (type==3) // FUNCTION 3 - CORNER
+    {
+      //std::cout << "3" << std::endl;
+      threshold(frame, frame_out, 127, 255,THRESH_BINARY);
+    }
+    else if (type==4) // FUNCTION 4
+    {
+      //std::cout << "4" << std::endl;
+      threshold(frame, frame_out, 127, 255,THRESH_BINARY);
+    }
+    else if (type==5) // FUNCTION 5
+    {
+      //std::cout << "5" << std::endl;
+      threshold(frame, frame_out, 127, 255,THRESH_BINARY);
+    }
+
+
+
+    //threshold(frame, frame_out, 127, 255,THRESH_BINARY);
 
 
     imshow("Task 1", frame);      // display the grabbed frame
@@ -48,11 +81,30 @@ int main(int argc, char** argv )
     {
       // the 'n' (next) key was pressed
       std::cout << "next" << std::endl;
+      if (type == last_type)
+      {
+        type = 0;
+      }
+      else
+      {
+        type++;
+      }
+
+      std::cout << type << std::endl;
     }
     else if (key == 112)
     {
       // the 'p' (previous) key was pressed
       std::cout << "previous" << std::endl;
+      if (type == 0)
+      {
+        type = last_type;
+      }
+      else
+      {
+        type--;
+      }
+      std::cout << type << std::endl;
     }
 
   }
