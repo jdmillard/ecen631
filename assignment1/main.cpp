@@ -162,7 +162,7 @@ int main(int argc, char** argv )
 
 
   // video feed has terminated
-  // -------------------- TASK 3 --------------------
+  // ------------------------------ TASK 3 ------------------------------
   // initialize the image object
   Mat image, key_image, image_out;
   // create OpenCV gui window
@@ -173,6 +173,19 @@ int main(int argc, char** argv )
   // image counter (5-40) and specifier (L,R)
   int n_img = 5;
   std::string dir = "L", path, n_img_str;
+
+
+  VideoWriter VOut2;         // Create a video write object.
+  // initialize video write object
+  VOut2.open("VideoOut2.avi", CV_FOURCC('M', 'P', 'E', 'G') , 30, Size(640, 480), 1);
+  // alternative syntax if missing codec
+  //VOut2.open("VideoOut.avi", -1 , 30, Size(640, 480), 1);
+
+
+
+
+
+
 
   while(1)
   {
@@ -259,6 +272,7 @@ int main(int argc, char** argv )
 
     drawKeypoints(image, keypoints_test, image, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
     imshow("Task 3", image);
+    VOut2 << image;            // save frame to video file
 
     // wait for a new key input
     int key = waitKey();
