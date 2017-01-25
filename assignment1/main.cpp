@@ -65,7 +65,9 @@ int main(int argc, char** argv )
       }
       else if (type==1) // FUNCTION 1 - THRESHOLD
       {
-        threshold(frame, frame_out, 127, 255, THRESH_BINARY);
+        cvtColor(frame, frame_out, CV_BGR2GRAY);
+        threshold(frame_out, frame_out, 50, 255, THRESH_BINARY);
+        cvtColor(frame_out, frame_out, CV_GRAY2BGR);
       }
       else if (type==2) // FUNCTION 2 - CANNY EDGE DETECTION
       {
@@ -82,6 +84,7 @@ int main(int argc, char** argv )
 
         normalize(frame_out, frame_out, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
         convertScaleAbs(frame_out, frame_out);
+        cvtColor(frame_out, frame_out, CV_GRAY2BGR);
       }
       else if (type==4) // FUNCTION 4 - HOUGH LINE DETECTION
       {
