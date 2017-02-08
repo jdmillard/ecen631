@@ -82,9 +82,21 @@ int main(int argc, char** argv )
     // test image validity
     if ( !image.data )
     {
-        printf("No image data \n");
-        return -1;
+      printf("No image data \n");
+      return -1;
     }
+
+    // convert image format to grayscale
+    cvtColor(image, image_gray, CV_BGR2GRAY);
+
+    // find the chessboard corners
+    found = findChessboardCorners(image_gray, patternsize, centers);
+
+    // refine corner locations with subpixel accuracy
+    cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(3,30,0.1));
+
+    // draw the corners in color on the original image
+    drawChessboardCorners(image, patternsize, Mat(centers), found);
 
     // display the current image
     imshow("Task 2", image);
@@ -94,8 +106,7 @@ int main(int argc, char** argv )
     key = waitKey();
     if (key == 110)
     {
-      // the 'n' (next) key was pressed, increment file
-      std::cout << "next image" << std::endl;
+      // the 'n' (next) key was pressed, increment image
     }
     else if (key == 27)
     {
