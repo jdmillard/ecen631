@@ -135,7 +135,7 @@ int main(int argc, char** argv )
 
 
   // now use the overall vectors to get the camera calibration
-
+  ret, mtx, dist, rvecs, tvecs = calibrateCamera(obj_points, img_points, image.shape[::-1], None, None);
 
   // wait for a new key input
   key = waitKey();
