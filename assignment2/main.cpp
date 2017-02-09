@@ -180,7 +180,7 @@ int main(int argc, char** argv )
 
 
   // create an array with the image names to undistort
-  std::string names[3] = {"Close.jpg", "Far.jpg", "Turned.jpg"};
+  std::string names[3] = {"Close.jpg", "Far.jpg", "Turn.jpg"};
 
 
   for (int j = 0; j<3; j++)
