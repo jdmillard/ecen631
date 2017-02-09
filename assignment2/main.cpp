@@ -83,9 +83,9 @@ int main(int argc, char** argv )
   // based on the way the calibrate camera defines the world frames
 
   // create a vector of 3d points corresponding
-  for (int x=0; x<h; x++)
+  for (int y=0; y<v; y++)
   {
-    for (int y=0; y<v; y++)
+    for (int x=0; x<h; x++)
     {
       // generate the current point
       p_cur.x = x;
@@ -134,8 +134,19 @@ int main(int argc, char** argv )
   }
 
 
+  Mat intrinsic = Mat(3, 3, CV_64FC1);
+  Mat distCoeffs = Mat(5, 1, CV_64FC1);
+  std::vector<Mat> rvecs;
+  std::vector<Mat> tvecs;
+  //intrinsic.ptr<float>(0)[0] = 1;
+  //intrinsic.ptr<float>(1)[1] = 1;
   // now use the overall vectors to get the camera calibration
-  ret, mtx, dist, rvecs, tvecs = calibrateCamera(obj_points, img_points, image.shape[::-1], None, None);
+  std::cout << "calculating..." << std::endl;
+  calibrateCamera(obj_points, img_points, image.size(), intrinsic, distCoeffs, rvecs, tvecs);
+
+
+  std::cout << intrinsic << std::endl;
+  std::cout << distCoeffs << std::endl;
 
   // wait for a new key input
   key = waitKey();
