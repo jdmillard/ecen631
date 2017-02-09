@@ -260,15 +260,13 @@ int main(int argc, char** argv )
   // convert rotation vector to rotation matrix
   Rodrigues(rvec, rmat);
 
-  //std::cout << rvec << std::endl;
-  std::cout << rmat << std::endl;
-  std::cout << tvec << std::endl;
+  //std::cout << rmat << std::endl;
+  //std::cout << tvec << std::endl;
 
   // write the pose data to "pose.yml"
   FileStorage fsw2("pose.yml", FileStorage::WRITE);
   fsw2 << "rotation" << rmat << "translation" << tvec;
   fsw2.release();
-
 
   // wait for a new key input
   key = waitKey();
@@ -295,7 +293,7 @@ int main(int argc, char** argv )
 
   RNG rng;
 
-  recalibrate = true;
+  recalibrate = false;
   if (recalibrate)
   {
     // initialize vector of vectors of 2-D floating points
@@ -409,12 +407,49 @@ int main(int argc, char** argv )
   }
 
 
+  // ------------------------------ TASK 6 ------------------------------
+  // create display window
+  namedWindow("Task 6a", CV_WINDOW_AUTOSIZE);
+  namedWindow("Task 6b", CV_WINDOW_AUTOSIZE);
+
+  // read the calibration data
+  FileStorage fsr2("calibration_own_final.xml", FileStorage::READ);
+  Mat intrinsic_own2, distortion_own2;
+  fsr2["intrinsic"] >> intrinsic_own2;
+  fsr2["distortion"] >> distortion_own2;
+  fsr2.release();
+
+  // extract current image to be undistorted
+  path = "../images/example.jpg";
+  image = imread(path, 1);
+  imshow("Task 6a", image);
+
+  // run function
+  Mat image2;
+  undistort(image, image2, intrinsic_own2, distortion_own2);
+
+  // generate difference image
+  Mat image3;
+  absdiff(image, image2, image3);
+
+  // display undistorted image
+  imshow("Task 6b", image2);
 
 
 
-
-
-
+  // wait for a new key input
+  key = waitKey();
+  if (key == 110)
+  {
+    // the 'n' (next) key was pressed, increment image
+    //std::cout << "moving on to task 3" << std::endl;
+  }
+  else if (key == 27)
+  {
+    // the 'esc' key was pressed, end application
+    std::cout << "terminating" << std::endl;
+    return -1;
+  }
 
 
 
