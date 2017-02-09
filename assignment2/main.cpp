@@ -270,9 +270,6 @@ int main(int argc, char** argv )
   fsw2.release();
 
 
-
-
-
   // wait for a new key input
   key = waitKey();
   if (key == 110)
