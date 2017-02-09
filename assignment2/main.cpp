@@ -135,29 +135,28 @@ int main(int argc, char** argv )
 
 
   Mat intrinsic = Mat(3, 3, CV_64FC1);
-  Mat distCoeffs = Mat(5, 1, CV_64FC1);
+  Mat distortion = Mat(5, 1, CV_64FC1);
   std::vector<Mat> rvecs;
   std::vector<Mat> tvecs;
   // now use the overall vectors to get the camera calibration
   std::cout << "calculating..." << std::endl;
-  calibrateCamera(obj_points, img_points, image.size(), intrinsic, distCoeffs, rvecs, tvecs);
+  calibrateCamera(obj_points, img_points, image.size(), intrinsic, distortion, rvecs, tvecs);
 
   std::cout << intrinsic << std::endl;
-  std::cout << distCoeffs << std::endl;
+  std::cout << distortion << std::endl;
 
   // write the calibration data to "calibration.xml"
   FileStorage fsw("calibration.xml", FileStorage::WRITE);
-  fsw << "intrinsic" << intrinsic << "distortion_coefficients" << distCoeffs;
+  fsw << "intrinsic" << intrinsic << "distortion" << distortion;
   fsw.release();
 
+  /*
   // read the calibration data
   FileStorage fsr("calibration.xml", FileStorage::READ);
-  Mat intrinsic_read, distCoeffs_read;
-  fsr["intrinsic"] >> intrinsic_read;
-  fsr["distortion_coefficients"] >> distCoeffs_read;
-
-  std::cout << intrinsic_read << std::endl;
-  std::cout << distCoeffs_read << std::endl;
+  Mat intrinsic2, distortion2;
+  fsr["intrinsic"] >> intrinsic2;
+  fsr["distortion"] >> distortion2;
+  */
 
 
 
