@@ -360,6 +360,7 @@ int main(int argc, char** argv )
         obj_points_own.push_back(obj_set_own);
 
         i++;
+        std::cout << i << std::endl;
       }
 
       // draw the corners in color on the original image
@@ -433,7 +434,7 @@ int main(int argc, char** argv )
   absdiff(image, image2, image3);
 
   // display undistorted image
-  imshow("Task 6b", image2);
+  imshow("Task 6b", image3);
 
 
 
