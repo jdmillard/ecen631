@@ -150,22 +150,13 @@ int main(int argc, char** argv )
   fsw << "intrinsic" << intrinsic << "distortion" << distortion;
   fsw.release();
 
-  /*
-  // read the calibration data
-  FileStorage fsr("calibration.xml", FileStorage::READ);
-  Mat intrinsic2, distortion2;
-  fsr["intrinsic"] >> intrinsic2;
-  fsr["distortion"] >> distortion2;
-  */
-
-
-
 
   // wait for a new key input
   key = waitKey();
   if (key == 110)
   {
     // the 'n' (next) key was pressed, increment image
+    std::cout << "moving on to task 3" << std::endl;
   }
   else if (key == 27)
   {
@@ -173,6 +164,60 @@ int main(int argc, char** argv )
     std::cout << "terminating" << std::endl;
     return -1;
   }
+
+  // ------------------------------ TASK 3 ------------------------------
+  // create display window
+  namedWindow("Task 3a", CV_WINDOW_AUTOSIZE);
+  namedWindow("Task 3b", CV_WINDOW_AUTOSIZE);
+
+  // read the calibration data
+  FileStorage fsr("calibration.xml", FileStorage::READ);
+  Mat intrinsic2, distortion2;
+  fsr["intrinsic"] >> intrinsic2;
+  fsr["distortion"] >> distortion2;
+
+
+  // create an array with the image names to undistort
+  std::string names[3] = {"Close.jpg", "Far.jpg", "Turned.jpg"};
+
+
+  for (int j = 0; j<3; j++)
+  {
+    // extract current image to be undistorted
+    path = "../images/" + names[j];
+    image = imread(path, 1);
+    imshow("Task 3a", image);
+
+    // run function
+    Mat image2;
+    undistort(image, image2, intrinsic2, distortion2);
+
+    // generate difference image
+    Mat image3;
+    absdiff(image, image2, image3);
+
+    // display undistorted image
+    imshow("Task 3b", image3);
+
+
+
+    // wait for a new key input
+    key = waitKey();
+    if (key == 110)
+    {
+      // the 'n' (next) key was pressed, increment image
+      //std::cout << "moving on to task 3" << std::endl;
+    }
+    else if (key == 27)
+    {
+      // the 'esc' key was pressed, end application
+      std::cout << "terminating" << std::endl;
+      return -1;
+    }
+
+
+  }
+
 
 
 
