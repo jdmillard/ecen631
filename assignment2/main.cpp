@@ -284,6 +284,143 @@ int main(int argc, char** argv )
     return -1;
   }
 
+  // ------------------------------ TASK 5 ------------------------------
+
+  namedWindow("Task 5", CV_WINDOW_AUTOSIZE);
+
+  // reset parameters for my chessboard
+  h = 9; // horizontal internal points
+  v = 7; // vertical internal points
+  Size patternsize2(h,v);
+
+  RNG rng;
+
+  recalibrate = true;
+  if (recalibrate)
+  {
+    // initialize vector of vectors of 2-D floating points
+    std::vector<std::vector<Point2f>> img_points_own;
+    std::vector<std::vector<Point3f>> obj_points_own;
+    std::vector<Point3f> obj_set_own;
+    Point3f p_cur_own;
+    centers.clear();
+
+    // obj_set is set of world frame checker points (0,0,0), (1,0,0) ... (n,m,0)
+    // each image will have a corresponding one, but they are all identical
+    // based on the way the calibrate camera defines the world frames
+
+    // create a vector of 3d points corresponding
+    for (int y=0; y<v; y++)
+    {
+      for (int x=0; x<h; x++)
+      {
+        // generate the current point
+        p_cur_own.x = x;
+        p_cur_own.y = y;
+        p_cur_own.z = 0.0f;
+
+        obj_set_own.push_back(p_cur_own);
+      }
+    }
+
+
+    VideoCapture video(0);    // get a camera object
+
+    // cycle through live video frames until enough images are found
+    int i=0;
+    while(i<40)
+    {
+      std::cout << i << std::endl;
+      found = false;
+      while(!found)
+      {
+        // grab a frame
+        video >> image;
+
+        // convert image format to grayscale
+        cvtColor(image, image_gray, CV_BGR2GRAY);
+
+        // find the chessboard corners
+        found = findChessboardCorners(image_gray, patternsize2, centers);
+        //std::cout << found << std::endl;
+
+        // display image
+        imshow("Task 5", image);
+
+        key = waitKey(10);
+      }
+
+
+      // refine corner locations with subpixel accuracy
+      cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(3,30,0.1));
+
+      // randomly sample whether or not to accept frame
+      // this is to give user time to move chessboard around
+      int sel = rng.uniform(1, 10);
+      if (sel==1)
+      {
+        // add the resulting vector of points to the overall vector
+        img_points_own.push_back(centers);
+        obj_points_own.push_back(obj_set_own);
+
+        i++;
+      }
+
+      // draw the corners in color on the original image
+      drawChessboardCorners(image, patternsize2, Mat(centers), found);
+
+      // display chessboard points live
+      imshow("Task 5", image);
+
+      key = waitKey(10);
+
+    }
+
+    // now we have vectors of vectors for calibration
+
+    Mat intrinsic_own = Mat(3, 3, CV_64FC1);
+    Mat distortion_own = Mat(5, 1, CV_64FC1);
+    std::vector<Mat> rvecs_own;
+    std::vector<Mat> tvecs_own;
+    // now use the overall vectors to get the camera calibration
+    std::cout << "calculating..." << std::endl;
+    calibrateCamera(obj_points_own, img_points_own, image.size(), intrinsic_own, distortion_own, rvecs_own, tvecs_own);
+
+    std::cout << intrinsic_own << std::endl;
+    std::cout << distortion_own << std::endl;
+
+    // write the calibration data to "calibration_own.xml"
+    FileStorage fsw("calibration_own.xml", FileStorage::WRITE);
+    fsw << "intrinsic" << intrinsic_own << "distortion" << distortion_own;
+    fsw.release();
+
+
+    // wait for a new key input
+    key = waitKey();
+    if (key == 110)
+    {
+      // the 'n' (next) key was pressed, increment image
+      //std::cout << "moving on to task 3" << std::endl;
+    }
+    else if (key == 27)
+    {
+      // the 'esc' key was pressed, end application
+      std::cout << "terminating" << std::endl;
+      return -1;
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 return 0;
