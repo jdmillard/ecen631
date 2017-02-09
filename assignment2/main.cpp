@@ -145,6 +145,23 @@ int main(int argc, char** argv )
   std::cout << intrinsic << std::endl;
   std::cout << distCoeffs << std::endl;
 
+  // write the calibration data to "calibration.xml"
+  FileStorage fsw("calibration.xml", FileStorage::WRITE);
+  fsw << "intrinsic" << intrinsic << "distortion_coefficients" << distCoeffs;
+  fsw.release();
+
+  // read the calibration data
+  FileStorage fsr("calibration.xml", FileStorage::READ);
+  Mat intrinsic_read, distCoeffs_read;
+  fsr["intrinsic"] >> intrinsic_read;
+  fsr["distortion_coefficients"] >> distCoeffs_read;
+
+  std::cout << intrinsic_read << std::endl;
+  std::cout << distCoeffs_read << std::endl;
+
+
+
+
   // wait for a new key input
   key = waitKey();
   if (key == 110)
@@ -160,5 +177,5 @@ int main(int argc, char** argv )
 
 
 
-  return 0;
+return 0;
 }
