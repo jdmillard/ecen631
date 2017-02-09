@@ -1,6 +1,7 @@
 //#include <stdio.h> // from OpenCV introduction
 #include <opencv2/opencv.hpp>
 #include <string> // needed for setting std::strings and using to_string
+#include <fstream>
 
 using namespace cv;
 
@@ -177,6 +178,7 @@ int main(int argc, char** argv )
   Mat intrinsic2, distortion2;
   fsr["intrinsic"] >> intrinsic2;
   fsr["distortion"] >> distortion2;
+  fsr.release();
 
 
   // create an array with the image names to undistort
@@ -220,6 +222,70 @@ int main(int argc, char** argv )
 
   }
 
+
+  // ------------------------------ TASK 4 ------------------------------
+  // load the known "object with corners"
+  path = "../images/Close.jpg";
+  image = imread(path, 1);
+
+  std::vector<Point2f> img_points2;
+  std::vector<Point3f> obj_points2;
+  Point2f p_cur2;
+  Point3f p_cur3;
+
+  // read in these points from txt file
+  std::ifstream file123("../data_points.txt");
+
+  // cycle through txt for 2d points
+  for (int k=0; k<20; k++)
+  {
+    file123 >> p_cur2.x;
+    file123 >> p_cur2.y;
+    img_points2.push_back(p_cur2);
+  }
+
+  // cycle through txt for 3d points
+  for (int k=0; k<20; k++)
+  {
+    file123 >> p_cur3.x;
+    file123 >> p_cur3.y;
+    file123 >> p_cur3.z;
+    obj_points2.push_back(p_cur3);
+  }
+
+  // use 2d and 3d points with the solvepnp function
+  Mat rvec, rmat, tvec;
+  bool solved = solvePnP(obj_points2, img_points2, intrinsic2, distortion2, rvec, tvec);
+
+  // convert rotation vector to rotation matrix
+  Rodrigues(rvec, rmat);
+
+  //std::cout << rvec << std::endl;
+  std::cout << rmat << std::endl;
+  std::cout << tvec << std::endl;
+
+  // write the pose data to "pose.yml"
+  FileStorage fsw2("pose.yml", FileStorage::WRITE);
+  fsw2 << "rotation" << rmat << "translation" << tvec;
+  fsw2.release();
+
+
+
+
+
+  // wait for a new key input
+  key = waitKey();
+  if (key == 110)
+  {
+    // the 'n' (next) key was pressed, increment image
+    //std::cout << "moving on to task 3" << std::endl;
+  }
+  else if (key == 27)
+  {
+    // the 'esc' key was pressed, end application
+    std::cout << "terminating" << std::endl;
+    return -1;
+  }
 
 
 
