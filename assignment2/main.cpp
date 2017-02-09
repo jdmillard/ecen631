@@ -330,9 +330,8 @@ int main(int argc, char** argv )
     int i=0;
     while(i<40)
     {
-      std::cout << i << std::endl;
       found = false;
-      while(!found)
+      while(!found) // cycle video until chessboard is in view
       {
         // grab a frame
         video >> image;
@@ -342,7 +341,6 @@ int main(int argc, char** argv )
 
         // find the chessboard corners
         found = findChessboardCorners(image_gray, patternsize2, centers);
-        //std::cout << found << std::endl;
 
         // display image
         imshow("Task 5", image);
