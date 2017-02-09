@@ -138,12 +138,9 @@ int main(int argc, char** argv )
   Mat distCoeffs = Mat(5, 1, CV_64FC1);
   std::vector<Mat> rvecs;
   std::vector<Mat> tvecs;
-  //intrinsic.ptr<float>(0)[0] = 1;
-  //intrinsic.ptr<float>(1)[1] = 1;
   // now use the overall vectors to get the camera calibration
   std::cout << "calculating..." << std::endl;
   calibrateCamera(obj_points, img_points, image.size(), intrinsic, distCoeffs, rvecs, tvecs);
-
 
   std::cout << intrinsic << std::endl;
   std::cout << distCoeffs << std::endl;
