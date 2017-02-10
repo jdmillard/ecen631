@@ -203,6 +203,8 @@ int main(int argc, char** argv )
     // display undistorted image
     imshow("Task 3b", image3);
 
+    // save the difference image
+    imwrite( names[j]+"_diff.jpg", image3 );
 
 
     // wait for a new key input
@@ -436,7 +438,8 @@ int main(int argc, char** argv )
   // display undistorted image
   imshow("Task 6b", image3);
 
-
+  // save the difference image
+  imwrite( "my_camera_diff.jpg", image3 );
 
   // wait for a new key input
   key = waitKey();
