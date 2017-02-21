@@ -17,7 +17,8 @@ int main(int argc, char** argv )
      //    //     //  //////  //    //     //////
 
 
-  bool recalibrate = true;
+  // individual camera calibration (loaded from xml when recalibrate=false)
+  bool recalibrate = false;
   if (recalibrate)
   {
     // initialize variables
@@ -211,6 +212,43 @@ int main(int argc, char** argv )
     fsr2["distortion"] >> distortion_right;
     fsr2.release();
   }
+
+
+////////    ///     //////  //    //     ///////
+   //      // //   //    // //   //     //     //
+   //     //   //  //       //  //             //
+   //    //     //  //////  /////        ///////
+   //    /////////       // //  //      //
+   //    //     // //    // //   //     //
+   //    //     //  //////  //    //    /////////
+
+
+  // stereo calibration
+
+  /*
+
+  double cv::omnidir::stereoCalibrate	(	InputOutputArrayOfArrays 	objectPoints,
+                                        InputOutputArrayOfArrays 	imagePoints1,
+                                        InputOutputArrayOfArrays 	imagePoints2,
+                                        const Size & 	imageSize1,
+                                        const Size & 	imageSize2,
+                                        InputOutputArray 	K1,
+                                        InputOutputArray 	xi1,
+                                        InputOutputArray 	D1,
+                                        InputOutputArray 	K2,
+                                        InputOutputArray 	xi2,
+                                        InputOutputArray 	D2,
+                                        OutputArray 	rvec,
+                                        OutputArray 	tvec,
+                                        OutputArrayOfArrays 	rvecsL,
+                                        OutputArrayOfArrays 	tvecsL,
+                                        int 	flags,
+                                        TermCriteria 	criteria,
+                                        OutputArray 	idx = noArray()
+                                        )
+
+  */
+
 
 
   printf("finished \n");
