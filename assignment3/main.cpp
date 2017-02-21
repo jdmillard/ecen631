@@ -11,15 +11,18 @@ int main(int argc, char** argv )
   // for Task 1, bring in the images and display them so we know that they work
   // only bring in the relevant ones
 
-  Mat image;
+  Mat         image_left, image_right;
   std::string path, n_img_str;
-  int n_img;
+  int         n_img;
 
-  namedWindow("Task 1", CV_WINDOW_AUTOSIZE); // initialize a display window
+  namedWindow("Task 1 Left", CV_WINDOW_AUTOSIZE);
+  namedWindow("Task 1 Right", CV_WINDOW_AUTOSIZE);
 
-  // for loop here
+  // loop through left and right images
   for (n_img = 0; n_img < 65; n_img++)
   {
+
+
     // convert n_img to string, accounting for the 0 in front
     if (n_img < 10)
     {
@@ -29,29 +32,37 @@ int main(int argc, char** argv )
     {
       n_img_str = std::to_string(n_img);
     }
+
+
+    // get left and right images
     path = "../images/left/leftL" + n_img_str + ".bmp";
-    std::cout << path << std::endl;
-
-    // need to do a path check for images which have been omitted
-
-
-
-    // load current image
-    image = imread( path, 1 );
+    image_left = imread( path, 1 );
+    path = "../images/right/rightR" + n_img_str + ".bmp";
+    image_right = imread( path, 1 );
 
 
-
-    // test image validity
-    if ( !image.data )
+    // test left image validity and display
+    if ( !image_left.data )
     {
-        printf("No image data \n");
-        return -1;
+      printf("no left image data \n");
+      //return -1;
+    }
+    else
+    {
+      imshow("Task 1 Left", image_left);
     }
 
 
-    imshow("Task 1", image);
-
-
+    // test right image validity and display
+    if ( !image_right.data )
+    {
+      printf("no right image data \n");
+      //return -1;
+    }
+    else
+    {
+      imshow("Task 1 Right", image_right);
+    }
 
 
     // wait for a new key input
@@ -68,8 +79,9 @@ int main(int argc, char** argv )
       return -1;
     }
 
+
   }
 
-
+printf("reached end \n");
 return 0;
 }
