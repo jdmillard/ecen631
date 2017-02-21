@@ -17,7 +17,7 @@ int main(int argc, char** argv )
      //    //     //  //////  //    //     //////
 
 
-  bool recalibrate = false;
+  bool recalibrate = true;
   if (recalibrate)
   {
     // initialize variables
@@ -54,8 +54,8 @@ int main(int argc, char** argv )
       for (int x=0; x<h; x++)
       {
         // generate the current point in accurate checkerboard scale
-        p_cur.x = x;
-        p_cur.y = y;
+        p_cur.x = x*square;
+        p_cur.y = y*square;
         p_cur.z = 0.0f;
 
         obj_set.push_back(p_cur);
@@ -210,12 +210,6 @@ int main(int argc, char** argv )
     fsr2["intrinsic"] >> intrinsic_right;
     fsr2["distortion"] >> distortion_right;
     fsr2.release();
-
-
-    std::cout<< intrinsic_left << std::endl;
-    std::cout<< distortion_left << std::endl;
-    std::cout<< intrinsic_right << std::endl;
-    std::cout<< distortion_right << std::endl;
   }
 
 
