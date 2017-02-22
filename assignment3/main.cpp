@@ -358,11 +358,77 @@ int main(int argc, char** argv )
   }
 
 
-  std::cout << R << std::endl;
-  std::cout << T << std::endl;
-  std::cout << E << std::endl;
-  std::cout << F << std::endl;
+////////    ///     //////  //    //     ///////
+   //      // //   //    // //   //     //     //
+   //     //   //  //       //  //             //
+   //    //     //  //////  /////        ///////
+   //    /////////       // //  //             //
+   //    //     // //    // //   //     //     //
+   //    //     //  //////  //    //     ///////
 
+
+  // epipolar lines
+  namedWindow("Task 3 Left", CV_WINDOW_AUTOSIZE);
+  namedWindow("Task 3 Right", CV_WINDOW_AUTOSIZE);
+  moveWindow("Task 3 Left", 50, 50);
+  moveWindow("Task 3 Right", 700, 50);
+
+  path = "../images/stereo/stereoL20.bmp";
+  image_left = imread( path, 1 );
+  path = "../images/stereo/stereoR20.bmp";
+  image_right = imread( path, 1 );
+
+  // undistort the selected images
+  Mat image_left_mod, image_right_mod;
+  undistort(image_left, image_left_mod, intrinsic_left, distortion_left);
+  undistort(image_right, image_right_mod, intrinsic_right, distortion_right);
+
+  // selected points on left image:
+  // center of clock              240, 62
+  // top left urban challenge     120, 293
+  // bottom right urban challenge 197, 342
+
+  // selected points of right image:
+  // top right chessboard         444, 273
+  // middle chessboard            355, 372
+  // bottom left chessboard       239, 426
+
+  Point l1(240, 62);
+  Point l2(120, 293);
+  Point l3(197, 342);
+  Point r1(444, 273);
+  Point r2(355, 372);
+  Point r3(239, 426);
+  int radius = 10;
+  Scalar color(0,255,255);
+  int thickness = 2;
+
+  circle(image_left_mod, l1, radius, color, thickness, 8);
+  circle(image_left_mod, l2, radius, color, thickness, 8);
+  circle(image_left_mod, l3, radius, color, thickness, 8);
+  circle(image_right_mod, r1, radius, color, thickness, 8);
+  circle(image_right_mod, r2, radius, color, thickness, 8);
+  circle(image_right_mod, r3, radius, color, thickness, 8);
+
+
+  imshow("Task 3 Left", image_left_mod);
+  imshow("Task 3 Right", image_right_mod);
+
+
+
+  // wait for a new key input
+  int key = waitKey();
+  if (key == 110)
+  {
+    // the 'n' (next) key was pressed, increment file
+    //std::cout << "next task" << std::endl;
+  }
+  else if (key == 27)
+  {
+    // the 'esc' key was pressed, end application
+    std::cout << "terminating" << std::endl;
+    return -1;
+  }
 
   printf("finished \n");
   return 0;
