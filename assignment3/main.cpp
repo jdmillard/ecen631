@@ -18,13 +18,13 @@ int main(int argc, char** argv )
 {
 
 
-  ////////    ///     //////  //    //       //
-     //      // //   //    // //   //      ////
-     //     //   //  //       //  //         //
-     //    //     //  //////  /////          //
-     //    /////////       // //  //         //
-     //    //     // //    // //   //        //
-     //    //     //  //////  //    //     //////
+////////    ///     //////  //    //       //
+   //      // //   //    // //   //      ////
+   //     //   //  //       //  //         //
+   //    //     //  //////  /////          //
+   //    /////////       // //  //         //
+   //    //     // //    // //   //        //
+   //    //     //  //////  //    //     //////
 
 
   // individual camera calibration (loaded from xml when recalibrate=false)
@@ -432,19 +432,82 @@ int main(int argc, char** argv )
 
   // calculate epilines
   std::vector<Point3f> l_lines, r_lines;
-  computeCorrespondEpilines(l_points, 2, F, r_lines);
-  computeCorrespondEpilines(r_points, 1, F, l_lines);
+  computeCorrespondEpilines(l_points, 1, F, r_lines);
+  computeCorrespondEpilines(r_points, 2, F, l_lines);
 
   // draw epilines
   drawEpiLines(image_right_mod, r_lines);
   drawEpiLines(image_left_mod, l_lines);
 
-
-
-
+  // display images with points and lines
   imshow("Task 3 Left", image_left_mod);
   imshow("Task 3 Right", image_right_mod);
 
+
+////////    ///     //////  //    //    //
+   //      // //   //    // //   //     //    //
+   //     //   //  //       //  //      //    //
+   //    //     //  //////  /////       //    //
+   //    /////////       // //  //      /////////
+   //    //     // //    // //   //           //
+   //    //     //  //////  //    //          //
+
+
+  // rectification
+  namedWindow("Task 4 Left Original", CV_WINDOW_AUTOSIZE);
+  namedWindow("Task 4 Right Original", CV_WINDOW_AUTOSIZE);
+  moveWindow("Task 4 Left Original", 50, 500);
+  moveWindow("Task 4 Right Original", 700, 500);
+  imshow("Task 4 Left Original", image_left);
+  imshow("Task 4 Right Original", image_right);
+
+  namedWindow("Task 4 Left Rectified", CV_WINDOW_AUTOSIZE);
+  namedWindow("Task 4 Right Rectified", CV_WINDOW_AUTOSIZE);
+  moveWindow("Task 4 Left Rectified", 50, 500);
+  moveWindow("Task 4 Right Rectified", 700, 500);
+
+  namedWindow("Task 4 Left Difference", CV_WINDOW_AUTOSIZE);
+  namedWindow("Task 4 Right Difference", CV_WINDOW_AUTOSIZE);
+  moveWindow("Task 4 Left Difference", 50, 500);
+  moveWindow("Task 4 Right Difference", 700, 500);
+
+  Mat R1, R2, P1, P2, Q;
+  stereoRectify(  intrinsic_left, distortion_left,
+                  intrinsic_right, distortion_right,
+                  image_left.size(),  R,  T,
+                  R1, R2, P1, P2, Q  );
+
+  // undistort left and right images
+  Mat mapx1, mapx2, mapy1, mapy2;
+  initUndistortRectifyMap(  intrinsic_left, distortion_left,
+                            R1, P1, image_left.size(),
+                            CV_16SC2, mapx1, mapy1  );
+  initUndistortRectifyMap(  intrinsic_right, distortion_right,
+                            R2, P2, image_right.size(),
+                            CV_16SC2, mapx2, mapy2  );
+
+  // remap images using calculating mapx, mapy
+  remap(image_left, image_left_mod, mapx1, mapy1, INTER_LINEAR, BORDER_CONSTANT, 0);
+  remap(image_right, image_right_mod, mapx2, mapy2, INTER_LINEAR, BORDER_CONSTANT, 0);
+
+  // get the absolute difference between rectified images
+  Mat diff_left, diff_right;
+  absdiff(image_left_mod, image_left, diff_left);
+  absdiff(image_right_mod, image_right, diff_right);
+
+  // draw some horizontal lines on both images
+  line(image_left_mod, Point(0, 75), Point(image_left_mod.cols, 75), Scalar(255, 0, 0), 1);
+  line(image_left_mod, Point(0, 300), Point(image_left_mod.cols, 300), Scalar(255, 0, 0), 1);
+  line(image_left_mod, Point(0, 345), Point(image_left_mod.cols, 345), Scalar(255, 0, 0), 1);
+  line(image_right_mod, Point(0, 75), Point(image_right_mod.cols, 75), Scalar(255, 0, 0), 1);
+  line(image_right_mod, Point(0, 300), Point(image_right_mod.cols, 300), Scalar(255, 0, 0), 1);
+  line(image_right_mod, Point(0, 345), Point(image_right_mod.cols, 345), Scalar(255, 0, 0), 1);
+
+  // show images
+  imshow("Task 4 Left Difference", diff_left);
+  imshow("Task 4 Right Difference", diff_right);
+  imshow("Task 4 Left Rectified", image_left_mod);
+  imshow("Task 4 Right Rectified", image_right_mod);
 
 
   // wait for a new key input
@@ -460,6 +523,7 @@ int main(int argc, char** argv )
     std::cout << "terminating" << std::endl;
     return -1;
   }
+
 
   printf("finished \n");
   return 0;
