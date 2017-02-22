@@ -4,6 +4,16 @@
 
 using namespace cv;
 
+void drawEpiLines(Mat img, const std::vector<Point3f>& lines) {
+    for (auto&& ell : lines) {
+        line(img,
+            Point(0, -ell.z / ell.y),
+            Point(img.cols, -(ell.z + ell.x*img.cols)/ell.y),
+            Scalar(255, 0, 0));
+    }
+}
+
+
 int main(int argc, char** argv )
 {
 
@@ -409,6 +419,26 @@ int main(int argc, char** argv )
   circle(image_right_mod, r1, radius, color, thickness, 8);
   circle(image_right_mod, r2, radius, color, thickness, 8);
   circle(image_right_mod, r3, radius, color, thickness, 8);
+
+  std::vector<Point> l_points;
+  l_points.push_back(l1);
+  l_points.push_back(l2);
+  l_points.push_back(l3);
+  std::vector<Point> r_points;
+  r_points.push_back(r1);
+  r_points.push_back(r2);
+  r_points.push_back(r3);
+
+  // calculate epilines
+  Mat l_lines, r_lines;
+  computeCorrespondEpilines(l_points, 2, F, r_lines);
+  computeCorrespondEpilines(r_points, 1, F, l_lines);
+
+  // draw epilines
+  drawEpiLines(image_right_mod, r_lines);
+  drawEpiLines(image_left_mod, l_lines);
+
+
 
 
   imshow("Task 3 Left", image_left_mod);
