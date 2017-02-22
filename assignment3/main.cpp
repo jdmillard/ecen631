@@ -359,9 +359,10 @@ int main(int argc, char** argv )
   else
   {
     // use existing calibration for stereo
+    //FileStorage s_fsr("calib_stereo.yaml", FileStorage::READ);
     FileStorage s_fsr("calibration_stereo_final.xml", FileStorage::READ);
     s_fsr["R"] >> R;
-    s_fsr["T"] >> T;
+    s_fsr["T"] >> T; // for Parker's calibration, make "T" > "t"
     s_fsr["E"] >> E;
     s_fsr["F"] >> F;
     s_fsr.release();
@@ -430,7 +431,7 @@ int main(int argc, char** argv )
   r_points.push_back(r3);
 
   // calculate epilines
-  Mat l_lines, r_lines;
+  std::vector<Point3f> l_lines, r_lines;
   computeCorrespondEpilines(l_points, 2, F, r_lines);
   computeCorrespondEpilines(r_points, 1, F, l_lines);
 
