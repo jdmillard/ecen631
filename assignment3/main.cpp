@@ -18,19 +18,19 @@ int main(int argc, char** argv )
 
 
   // individual camera calibration (loaded from xml when recalibrate=false)
-  bool recalibrate = false;
+  // initialize variables
+  Mat         image_left, image_right, image_gray, image_mod;
+  std::string path, n_img_str;
+  int         n_img;
+  int         h = 10; // horizontal internal points
+  int         v = 7;  // vertical internal points
+  float       square = 3.88;  // width of chessboard squares
+  Size        patternsize(h,v);
+  std::vector<Point2f> centers;
+  bool        found;
+  bool        recalibrate = false;
   if (recalibrate)
   {
-    // initialize variables
-    Mat         image_left, image_right, image_gray, image_mod;
-    std::string path, n_img_str;
-    int         n_img;
-    int         h = 10; // horizontal internal points
-    int         v = 7;  // vertical internal points
-    float       square = 3.88;  // width of chessboard squares
-    Size        patternsize(h,v);
-    std::vector<Point2f> centers;
-    bool        found;
 
     namedWindow("Task 1 Left", CV_WINDOW_AUTOSIZE);
     namedWindow("Task 1 Right", CV_WINDOW_AUTOSIZE);
@@ -99,21 +99,16 @@ int main(int argc, char** argv )
       {
         // convert image format to grayscale
         cvtColor(image_left, image_gray, CV_BGR2GRAY);
-
         // find the chessboard corners
         found = findChessboardCorners(image_gray, patternsize, centers);
-
         // refine corner locations with subpixel accuracy
         cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(3,30,0.1));
-
         // add the resulting vector of points to the overall vector
         img_points_left.push_back(centers);
         obj_points_left.push_back(obj_set);
-
         // draw the corners in color on the original image
         image_mod = image_left.clone();
         drawChessboardCorners(image_mod, patternsize, Mat(centers), found);
-
         // display the current image
         imshow("Task 1 Left", image_mod);
       }
@@ -130,21 +125,16 @@ int main(int argc, char** argv )
         std::cout << n_img << std::endl;
         // convert image format to grayscale
         cvtColor(image_right, image_gray, CV_BGR2GRAY);
-
         // find the chessboard corners
         found = findChessboardCorners(image_gray, patternsize, centers);
-
         // refine corner locations with subpixel accuracy
         cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(3,30,0.1));
-
         // add the resulting vector of points to the overall vector
         img_points_right.push_back(centers);
         obj_points_right.push_back(obj_set);
-
         // draw the corners in color on the original image
         image_mod = image_right.clone();
         drawChessboardCorners(image_mod, patternsize, Mat(centers), found);
-
         // display the current image
         imshow("Task 1 Right", image_mod);
       }
@@ -225,29 +215,139 @@ int main(int argc, char** argv )
 
   // stereo calibration
 
+
+  namedWindow("Task 2 Left", CV_WINDOW_AUTOSIZE);
+  namedWindow("Task 2 Right", CV_WINDOW_AUTOSIZE);
+  moveWindow("Task 2 Left", 50, 50);
+  moveWindow("Task 2 Right", 700, 50);
+
+  // initialize vector of vectors of 2-D floating points
+  std::vector<std::vector<Point2f>> s_img_points_left;
+  std::vector<std::vector<Point2f>> s_img_points_right;
+  std::vector<std::vector<Point3f>> s_obj_points;
+  std::vector<Point3f> s_obj_set;
+  Point3f s_p_cur;
+
+  // s_obj_set is set of world frame checker points (0,0,0), (1,0,0) ... (n,m,0)
+  // each image will have a corresponding one, but they are all identical
+  // based on the way the calibrate camera defines the world frames
+
+  // create a vector of 3d points
+  for (int y=0; y<v; y++)
+  {
+    for (int x=0; x<h; x++)
+    {
+      // generate the current point in accurate checkerboard scale
+      s_p_cur.x = x*square;
+      s_p_cur.y = y*square;
+      s_p_cur.z = 0.0f;
+
+      s_obj_set.push_back(s_p_cur);
+    }
+  }
+
+
+  // loop through left and right images
+  for (n_img = 0; n_img <= 59; n_img++)
+  {
+    std::cout << n_img << std::endl;
+    // convert n_img to string, accounting for the 0 in front
+    if (n_img < 10)
+    {
+      n_img_str = "0" + std::to_string(n_img);
+    }
+    else
+    {
+      n_img_str = std::to_string(n_img);
+    }
+
+
+    // get left and right images
+    path = "../images/stereo/stereoL" + n_img_str + ".bmp";
+    image_left = imread( path, 1 );
+    path = "../images/stereo/stereoR" + n_img_str + ".bmp";
+    image_right = imread( path, 1 );
+
+
+    // test left image validity (of both left and right) and display
+    if ( (!image_left.data) || (!image_right.data) )
+    {
+      printf("image pair omitted \n");
+      //return -1;
+    }
+    else
+    {
+      // find chessboard corners of left stereo image
+      // convert image format to grayscale
+      cvtColor(image_left, image_gray, CV_BGR2GRAY);
+      // find the chessboard corners
+      found = findChessboardCorners(image_gray, patternsize, centers);
+      // refine corner locations with subpixel accuracy
+      cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(3,30,0.1));
+      // add the resulting vector of points to the overall vector
+      s_img_points_left.push_back(centers);
+      // draw the corners in color on the original image
+      image_mod = image_left.clone();
+      drawChessboardCorners(image_mod, patternsize, Mat(centers), found);
+      // display the current image
+      imshow("Task 2 Left", image_mod);
+
+
+      // find chessboard corners of right stereo image
+      // convert image format to grayscale
+      cvtColor(image_right, image_gray, CV_BGR2GRAY);
+      // find the chessboard corners
+      found = findChessboardCorners(image_gray, patternsize, centers);
+      // refine corner locations with subpixel accuracy
+      cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(3,30,0.1));
+      // add the resulting vector of points to the overall vector
+      s_img_points_right.push_back(centers);
+      // draw the corners in color on the original image
+      image_mod = image_right.clone();
+      drawChessboardCorners(image_mod, patternsize, Mat(centers), found);
+      // display the current image
+      imshow("Task 2 Right", image_mod);
+
+
+      // add the corresponding object points that are seen in both images
+      s_obj_points.push_back(s_obj_set);
+
+
+      // wait for a new key input
+      int key = waitKey();
+      if (key == 110)
+      {
+        // the 'n' (next) key was pressed, increment file
+        //std::cout << "next task" << std::endl;
+      }
+      else if (key == 27)
+      {
+        // the 'esc' key was pressed, end application
+        std::cout << "terminating" << std::endl;
+        return -1;
+      }
+    }
+
+  } // end of loop through images
+
+
   /*
-
-  double cv::omnidir::stereoCalibrate	(	InputOutputArrayOfArrays 	objectPoints,
-                                        InputOutputArrayOfArrays 	imagePoints1,
-                                        InputOutputArrayOfArrays 	imagePoints2,
-                                        const Size & 	imageSize1,
-                                        const Size & 	imageSize2,
-                                        InputOutputArray 	K1,
-                                        InputOutputArray 	xi1,
-                                        InputOutputArray 	D1,
-                                        InputOutputArray 	K2,
-                                        InputOutputArray 	xi2,
-                                        InputOutputArray 	D2,
-                                        OutputArray 	rvec,
-                                        OutputArray 	tvec,
-                                        OutputArrayOfArrays 	rvecsL,
-                                        OutputArrayOfArrays 	tvecsL,
-                                        int 	flags,
-                                        TermCriteria 	criteria,
-                                        OutputArray 	idx = noArray()
-                                        )
-
+  double stereoCalibrate( InputArrayOfArrays objectPoints,
+                          InputArrayOfArrays imagePoints1,
+                          InputArrayOfArrays imagePoints2,
+                          InputOutputArray cameraMatrix1,
+                          InputOutputArray distCoeffs1,
+                          InputOutputArray cameraMatrix2,
+                          InputOutputArray distCoeffs2,
+                          Size imageSize,
+                          OutputArray R,
+                          OutputArray T,
+                          OutputArray E,
+                          OutputArray F,
+                          TermCriteria criteria=TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 1e-6),
+                          int flags=CALIB_FIX_INTRINSIC )
   */
+
 
 
 
