@@ -20,6 +20,10 @@ int main(int argc, char** argv )
   // individual camera calibration (loaded from xml when recalibrate=false)
   // initialize variables
   Mat         image_left, image_right, image_gray, image_mod;
+  Mat intrinsic_left;
+  Mat distortion_left;
+  Mat intrinsic_right;
+  Mat distortion_right;
   std::string path, n_img_str;
   int         n_img;
   int         h = 10; // horizontal internal points
@@ -28,7 +32,8 @@ int main(int argc, char** argv )
   Size        patternsize(h,v);
   std::vector<Point2f> centers;
   bool        found;
-  bool        recalibrate = false;
+  bool        recalibrate = true;
+
   if (recalibrate)
   {
 
@@ -102,7 +107,7 @@ int main(int argc, char** argv )
         // find the chessboard corners
         found = findChessboardCorners(image_gray, patternsize, centers);
         // refine corner locations with subpixel accuracy
-        cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(3,30,0.1));
+        cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 60, 0.001));
         // add the resulting vector of points to the overall vector
         img_points_left.push_back(centers);
         obj_points_left.push_back(obj_set);
@@ -128,7 +133,7 @@ int main(int argc, char** argv )
         // find the chessboard corners
         found = findChessboardCorners(image_gray, patternsize, centers);
         // refine corner locations with subpixel accuracy
-        cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(3,30,0.1));
+        cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 60, 0.001));
         // add the resulting vector of points to the overall vector
         img_points_right.push_back(centers);
         obj_points_right.push_back(obj_set);
@@ -159,8 +164,6 @@ int main(int argc, char** argv )
 
 
     // calibrate the left camera
-    Mat intrinsic_left = Mat(3, 3, CV_64FC1);
-    Mat distortion_left = Mat(5, 1, CV_64FC1);
     std::vector<Mat> rvecs;
     std::vector<Mat> tvecs;
     // now use the overall vectors to get the camera calibration
@@ -173,8 +176,6 @@ int main(int argc, char** argv )
 
 
     // calibrate the right camera
-    Mat intrinsic_right = Mat(3, 3, CV_64FC1);
-    Mat distortion_right = Mat(5, 1, CV_64FC1);
     // now use the overall vectors to get the camera calibration
     std::cout << "calculating right calibration..." << std::endl;
     calibrateCamera(obj_points_right, img_points_right, image_gray.size(), intrinsic_right, distortion_right, rvecs, tvecs);
@@ -188,19 +189,16 @@ int main(int argc, char** argv )
   else
   {
     // use existing calibration for left
-    Mat intrinsic_left;
-    Mat distortion_left;
     FileStorage fsr1("calibration_left_final.xml", FileStorage::READ);
     fsr1["intrinsic"] >> intrinsic_left;
     fsr1["distortion"] >> distortion_left;
     fsr1.release();
     // use existing calibration for right
-    Mat intrinsic_right;
-    Mat distortion_right;
     FileStorage fsr2("calibration_right_final.xml", FileStorage::READ);
     fsr2["intrinsic"] >> intrinsic_right;
     fsr2["distortion"] >> distortion_right;
     fsr2.release();
+
   }
 
 
@@ -283,7 +281,7 @@ int main(int argc, char** argv )
       // find the chessboard corners
       found = findChessboardCorners(image_gray, patternsize, centers);
       // refine corner locations with subpixel accuracy
-      cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(3,30,0.1));
+      cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 60, 0.001));
       // add the resulting vector of points to the overall vector
       s_img_points_left.push_back(centers);
       // draw the corners in color on the original image
@@ -299,7 +297,7 @@ int main(int argc, char** argv )
       // find the chessboard corners
       found = findChessboardCorners(image_gray, patternsize, centers);
       // refine corner locations with subpixel accuracy
-      cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(3,30,0.1));
+      cornerSubPix(image_gray, centers, Size(5,5), Size(-1,-1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 60, 0.001));
       // add the resulting vector of points to the overall vector
       s_img_points_right.push_back(centers);
       // draw the corners in color on the original image
@@ -331,22 +329,29 @@ int main(int argc, char** argv )
   } // end of loop through images
 
 
-  /*
-  double stereoCalibrate( InputArrayOfArrays objectPoints,
-                          InputArrayOfArrays imagePoints1,
-                          InputArrayOfArrays imagePoints2,
-                          InputOutputArray cameraMatrix1,
-                          InputOutputArray distCoeffs1,
-                          InputOutputArray cameraMatrix2,
-                          InputOutputArray distCoeffs2,
-                          Size imageSize,
-                          OutputArray R,
-                          OutputArray T,
-                          OutputArray E,
-                          OutputArray F,
-                          TermCriteria criteria=TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 1e-6),
-                          int flags=CALIB_FIX_INTRINSIC )
-  */
+  // perform stereo calibration
+
+
+  Mat R, T, E, F;
+  std::cout << "calculating stereo calibration..." << std::endl;
+  double rms = stereoCalibrate( s_obj_points,
+                                s_img_points_left,  s_img_points_right,
+                                intrinsic_left,     distortion_left,
+                                intrinsic_right,    distortion_right,
+                                image_gray.size(),  R,  T,  E,  F,
+                                CV_CALIB_FIX_INTRINSIC,
+                                TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 100, 1e-5) );
+
+  std::cout << R << std::endl;
+  std::cout << T << std::endl;
+  std::cout << E << std::endl;
+  std::cout << F << std::endl;
+  // write the calibration data to "calibration_stereo.xml"
+  FileStorage s_fsw("calibration_stereo.xml", FileStorage::WRITE);
+  s_fsw << "R" << R << "T" << T << "E" << E << "F" << F;
+  s_fsw.release();
+
+
 
 
 
