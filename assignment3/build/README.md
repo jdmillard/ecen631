@@ -1,6 +1,6 @@
 Build and Run
 ---
-This assignment demonstrates camera calibration.
+This assignment demonstrates stereo camera calibration.
 
 
 From the build directory, these commands should build and run a given assignment:
