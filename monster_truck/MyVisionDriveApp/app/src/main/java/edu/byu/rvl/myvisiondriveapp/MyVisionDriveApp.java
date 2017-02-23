@@ -38,13 +38,15 @@ public class MyVisionDriveApp extends IOIOActivity implements View.OnTouchListen
     private CameraBridgeViewBase mOpenCvCameraView;
     static final int 				N_BUFFERS = 2;
     static final int				NUM_FINGERS = 2;
-    public static int           	viewMode = 0;
+    public static int           	viewMode = 1;
     public static int[]			    TouchX, TouchY;
     public static float				StartX, StartY;
     public static int				actionCode;
     public static int				pointerCount = 0;
     public static int				inputValueX = 0;
     public static int				inputValueY = 0;
+    public static int				MYinputValueX = 0;
+    public static int				MYinputValueY = 0;
 
     private ArrayList<String> MenuItems = new ArrayList<String>();
     Mat mRgba[];
@@ -214,8 +216,31 @@ public class MyVisionDriveApp extends IOIOActivity implements View.OnTouchListen
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         switch (viewMode) {
-            case 0:         // RGB
+            case 0:         // Grid
+
+                // this mode is accessed via in-app menu "Grid" mode
+                // the default mode is "RGB" which will not control the truck!
+
+                 //////   ///////  //    // //////// ////////   ///////  //
+                //    // //     // ///   //    //    //     // //     // //
+                //       //     // ////  //    //    //     // //     // //
+                //       //     // // // //    //    ////////  //     // //
+                //       //     // //  ////    //    //   //   //     // //
+                //    // //     // //   ///    //    //    //  //     // //
+                 //////   ///////  //    //    //    //     //  ///////  ////////
+
+                // inputFrame.rgba() is the current frame, mDisplay is the Mat displayed live
+
+
+
+
+                // here, the occupancy grid is generated and populated
                 mDisplay = inputFrame.rgba();
+
+                // set the steering and power based on visual processing results
+                MYinputValueX = 0; // steering  -1500 to 1500 positive is left, negative is right
+                MYinputValueY = 100; // power     -2500 to 2500
+
                 break;
             case 1:         // RGB
                 mDisplay = inputFrame.rgba();
@@ -288,8 +313,12 @@ public class MyVisionDriveApp extends IOIOActivity implements View.OnTouchListen
         public void loop() throws ConnectionLostException, InterruptedException {
             LED = (pointerCount == 1);
             led_.write(LED);
-            turnOutput_.setPulseWidth(STEER_OFF + inputValueX + STEER_MAX/2);       // Offset by 1000
-            pwrOutput_.setPulseWidth(POWER_OFF + inputValueY + POWER_MAX/2);        // offset by 500
+            // STEER_MAX = 1000; // these values are set above
+            // STEER_OFF = 1000;
+            // POWER_MAX = 2000;
+            // POWER_OFF = 500;
+            turnOutput_.setPulseWidth(STEER_OFF + MYinputValueX + STEER_MAX/2);       // offset by 1000
+            pwrOutput_.setPulseWidth(POWER_OFF + MYinputValueY + POWER_MAX/2);        // offset by 500
             Thread.sleep(100);
         }
 
