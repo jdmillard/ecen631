@@ -231,51 +231,86 @@ public class MyVisionDriveApp extends IOIOActivity implements View.OnTouchListen
 
                 // inputFrame.rgba() is the current frame, mDisplay is the Mat displayed live
 
+                // populate each grid cell with content from image
+                // AND evaluate if it is occupied, if occupied add to running sum
+                // CODE HERE <<<<<< --------
 
 
 
-                // here, the occupancy grid is generated and populated
-                mDisplay = inputFrame.rgba();
+                // convert final result of running sum into a steering value
+                // CODE HERE <<<<<< --------
+
+
+
+
 
                 // set the steering and power based on visual processing results
-                MYinputValueX = 0; // steering  -1500 to 1500 positive is left, negative is right
+                MYinputValueX = 0; // steering    -1500 to 1500 positive is left, negative is right
                 MYinputValueY = 100; // power     -2500 to 2500
+
+                // display the binarized occupancy grid real-time
+                mDisplay = inputFrame.rgba();
+
 
                 break;
             case 1:         // RGB
                 mDisplay = inputFrame.rgba();
+                // in this mode, kill the steering and power
+                MYinputValueX = 0;
+                MYinputValueY = 0;
                 break;
             case 2:         // Difference
                 mRgba[bufferIndex] = inputFrame.rgba();
                 Core.absdiff(mRgba[bufferIndex], mRgba[1-bufferIndex], mDisplay);
                 bufferIndex = 1 - bufferIndex;
+                // in this mode, kill the steering and power
+                MYinputValueX = 0;
+                MYinputValueY = 0;
                 break;
             case 3:         // R
                 Core.extractChannel(inputFrame.rgba(), mChannel, 0);     // R
                 Imgproc.cvtColor(mChannel, mDisplay, Imgproc.COLOR_GRAY2RGB);
+                // in this mode, kill the steering and power
+                MYinputValueX = 0;
+                MYinputValueY = 0;
                 break;
             case 4:         // G
                 Core.extractChannel(inputFrame.rgba(), mChannel, 1);     // G
                 Imgproc.cvtColor(mChannel, mDisplay, Imgproc.COLOR_GRAY2RGB);
+                // in this mode, kill the steering and power
+                MYinputValueX = 0;
+                MYinputValueY = 0;
                 break;
             case 5:         // B
                 Core.extractChannel(inputFrame.rgba(), mChannel, 2);     // B
                 Imgproc.cvtColor(mChannel, mDisplay, Imgproc.COLOR_GRAY2RGB);
+                // in this mode, kill the steering and power
+                MYinputValueX = 0;
+                MYinputValueY = 0;
                 break;
             case 6:         // H
                 Imgproc.cvtColor(inputFrame.rgba(), mHSV, Imgproc.COLOR_RGB2HSV);
                 Core.extractChannel(mHSV, mChannel, 0);         // hue
                 Imgproc.cvtColor(mChannel, mDisplay, Imgproc.COLOR_GRAY2RGB);
+                // in this mode, kill the steering and power
+                MYinputValueX = 0;
+                MYinputValueY = 0;
                 break;
             case 7:         // S
                 Imgproc.cvtColor(inputFrame.rgba(), mHSV, Imgproc.COLOR_RGB2HSV);
                 Core.extractChannel(mHSV, mChannel, 1);         // saturation
                 Imgproc.cvtColor(mChannel, mDisplay, Imgproc.COLOR_GRAY2RGB);
+                // in this mode, kill the steering and power
+                MYinputValueX = 0;
+                MYinputValueY = 0;
                 break;
             case 8:         // V
                 Imgproc.cvtColor(inputFrame.rgba(), mHSV, Imgproc.COLOR_RGB2HSV);
                 Core.extractChannel(mHSV, mChannel, 2);         // intensity
                 Imgproc.cvtColor(mChannel, mDisplay, Imgproc.COLOR_GRAY2RGB);
+                // in this mode, kill the steering and power
+                MYinputValueX = 0;
+                MYinputValueY = 0;
                 break;
         }
         // Use Core.putText in 2.4.10   Imgproc.putText in 3.1.0 doesn't work
