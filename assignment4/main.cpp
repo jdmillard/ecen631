@@ -30,8 +30,11 @@ int main(int argc, char** argv )
   std::vector<Point2f>  centers_right, centers4_right;
 
   Size                  patternsize(h,v);
-  Mat                   image_left, image_right,
-                        image_left_gray, image_right_gray;
+  Mat                   image_left,      image_right,
+                        image_left_gray, image_right_gray,
+                        intrinsic_left,  intrinsic_right,
+                        distortion_left, distortion_right,
+                        R, T, E, F;
 
   namedWindow("Task 1 Left", CV_WINDOW_AUTOSIZE);
   namedWindow("Task 1 Right", CV_WINDOW_AUTOSIZE);
@@ -53,6 +56,7 @@ int main(int argc, char** argv )
   // refine corner locations with subpixel accuracy
   cornerSubPix(image_left_gray,  centers_left,  Size(5,5), Size(-1,-1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 60, 0.001));
   cornerSubPix(image_right_gray, centers_right, Size(5,5), Size(-1,-1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 60, 0.001));
+
   // extract the 4 corner points
   centers4_left.push_back(centers_left[0]);
   centers4_left.push_back(centers_left[0+h-1]);
@@ -65,15 +69,36 @@ int main(int argc, char** argv )
 
   // draw the 4 corner points
   Scalar color1 = Scalar(255,0,0);
-  circle(image_left, centers_left[0],             10, color1, 2);
-  circle(image_left, centers_left[0+h-1],         10, color1, 2);
-  circle(image_left, centers_left[h*(v-1)],       10, color1, 2);
-  circle(image_left, centers_left[h*(v-1)+h-1],   10, color1, 2);
+  circle(image_left, centers4_left[0], 10, color1, 2);
+  circle(image_left, centers4_left[1], 10, color1, 2);
+  circle(image_left, centers4_left[2], 10, color1, 2);
+  circle(image_left, centers4_left[3], 10, color1, 2);
   Scalar color2 = Scalar(0,0,255);
-  circle(image_right, centers_right[0],           10, color2, 2);
-  circle(image_right, centers_right[0+h-1],       10, color2, 2);
-  circle(image_right, centers_right[h*(v-1)],     10, color2, 2);
-  circle(image_right, centers_right[h*(v-1)+h-1], 10, color2, 2);
+  circle(image_right, centers4_right[0], 10, color2, 2);
+  circle(image_right, centers4_right[1], 10, color2, 2);
+  circle(image_right, centers4_right[2], 10, color2, 2);
+  circle(image_right, centers4_right[3], 10, color2, 2);
+
+  // load existing calibration for left
+  FileStorage fsr1("calibration_left_final.xml", FileStorage::READ);
+  fsr1["intrinsic"] >> intrinsic_left;
+  fsr1["distortion"] >> distortion_left;
+  fsr1.release();
+  // load existing calibration for right
+  FileStorage fsr2("calibration_right_final.xml", FileStorage::READ);
+  fsr2["intrinsic"] >> intrinsic_right;
+  fsr2["distortion"] >> distortion_right;
+  fsr2.release();
+  // load existing stereo calibration parameters
+  FileStorage fsr3("calibration_stereo_final.xml", FileStorage::READ);
+  fsr3["R"] >> R;
+  fsr3["T"] >> T;
+  fsr3["E"] >> E;
+  fsr3["F"] >> F;
+  fsr3.release();
+
+  // undistort the 4 corner points
+  //undistortPoints(centers4_left, centers4_left, cameraMatrix, distCoeffs, InputArray R=noArray(), InputArray P=noArray())
 
 
   // undistortPoints() to undistort and rectify the 4 outermost points

@@ -477,6 +477,11 @@ int main(int argc, char** argv )
                   image_left.size(),  R,  T,
                   R1, R2, P1, P2, Q  );
 
+  // write the calibration data to "calibration_stereo.xml"
+  FileStorage r_fsw("rectification.xml", FileStorage::WRITE);
+  r_fsw << "R1" << R1 << "R2" << R2 << "P1" << P1 << "P2" << P2;
+  r_fsw.release();
+
   // undistort left and right images
   Mat mapx1, mapx2, mapy1, mapy2;
   initUndistortRectifyMap(  intrinsic_left, distortion_left,
