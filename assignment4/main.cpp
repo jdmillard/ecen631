@@ -26,8 +26,8 @@ int main(int argc, char** argv )
   bool                  found;
 
   std::string           path;
-  std::vector<Point2f>  centers_left;
-  std::vector<Point2f>  centers_right;
+  std::vector<Point2f>  centers_left,  centers4_left;
+  std::vector<Point2f>  centers_right, centers4_right;
 
   Size                  patternsize(h,v);
   Mat                   image_left, image_right,
@@ -53,6 +53,16 @@ int main(int argc, char** argv )
   // refine corner locations with subpixel accuracy
   cornerSubPix(image_left_gray,  centers_left,  Size(5,5), Size(-1,-1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 60, 0.001));
   cornerSubPix(image_right_gray, centers_right, Size(5,5), Size(-1,-1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 60, 0.001));
+  // extract the 4 corner points
+  centers4_left.push_back(centers_left[0]);
+  centers4_left.push_back(centers_left[0+h-1]);
+  centers4_left.push_back(centers_left[h*(v-1)]);
+  centers4_left.push_back(centers_left[h*(v-1)+h-1]);
+  centers4_right.push_back(centers_right[0]);
+  centers4_right.push_back(centers_right[0+h-1]);
+  centers4_right.push_back(centers_right[h*(v-1)]);
+  centers4_right.push_back(centers_right[h*(v-1)+h-1]);
+
   // draw the 4 corner points
   Scalar color1 = Scalar(255,0,0);
   circle(image_left, centers_left[0],             10, color1, 2);
