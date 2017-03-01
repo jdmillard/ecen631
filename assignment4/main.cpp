@@ -34,7 +34,8 @@ int main(int argc, char** argv )
                         image_left_gray, image_right_gray,
                         intrinsic_left,  intrinsic_right,
                         distortion_left, distortion_right,
-                        R, T, E, F;
+                        R,  T,  E,  F,
+                        R1, R2, P1, P2;
 
   namedWindow("Task 1 Left", CV_WINDOW_AUTOSIZE);
   namedWindow("Task 1 Right", CV_WINDOW_AUTOSIZE);
@@ -96,12 +97,24 @@ int main(int argc, char** argv )
   fsr3["E"] >> E;
   fsr3["F"] >> F;
   fsr3.release();
+  // load existing rectification parameters
+  FileStorage fsr4("rectification_final.xml", FileStorage::READ);
+  fsr3["R1"] >> R1;
+  fsr3["R2"] >> R2;
+  fsr3["P1"] >> P1;
+  fsr3["P2"] >> P2;
+  fsr3.release();
 
-  // undistort the 4 corner points
-  //undistortPoints(centers4_left, centers4_left, cameraMatrix, distCoeffs, InputArray R=noArray(), InputArray P=noArray())
+  // undistort the 4 corner points of left and right
+  undistortPoints(centers4_left,   centers4_left,
+                  intrinsic_left,  distortion_left,
+                  R1,              P1);
+  undistortPoints(centers4_right,  centers4_right,
+                  intrinsic_right, distortion_right,
+                  R2,              P2);
 
 
-  // undistortPoints() to undistort and rectify the 4 outermost points
+
   // perspectiveTransform() to calculate 3D information of 4 points
   // add circles to the 4 points on the image pairs & x,y,z information
 
