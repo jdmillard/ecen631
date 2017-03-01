@@ -44,20 +44,26 @@ int main(int argc, char** argv )
   path = "../images/checker/stereoR18.bmp";
   image_right = imread( path, 1 );
 
-  // display left and right images
-  imshow("Task 1 Left", image_left);
-  imshow("Task 1 Right", image_right);
-
   // convert images format to grayscale
   cvtColor(image_left, image_left_gray, CV_BGR2GRAY);
   cvtColor(image_right, image_right_gray, CV_BGR2GRAY);
   // find the chessboard corners
-  found = findChessboardCorners(image_left_gray, patternsize, centers_left);
-  found = findChessboardCorners(image_left_gray, patternsize, centers_right);
+  found = findChessboardCorners(image_left_gray,  patternsize, centers_left);
+  found = findChessboardCorners(image_right_gray, patternsize, centers_right);
   // refine corner locations with subpixel accuracy
   cornerSubPix(image_left_gray,  centers_left,  Size(5,5), Size(-1,-1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 60, 0.001));
   cornerSubPix(image_right_gray, centers_right, Size(5,5), Size(-1,-1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 60, 0.001));
-
+  // draw the 4 corner points
+  Scalar color1 = Scalar(255,0,0);
+  circle(image_left, centers_left[0],             10, color1, 2);
+  circle(image_left, centers_left[0+h-1],         10, color1, 2);
+  circle(image_left, centers_left[h*(v-1)],       10, color1, 2);
+  circle(image_left, centers_left[h*(v-1)+h-1],   10, color1, 2);
+  Scalar color2 = Scalar(0,0,255);
+  circle(image_right, centers_right[0],           10, color2, 2);
+  circle(image_right, centers_right[0+h-1],       10, color2, 2);
+  circle(image_right, centers_right[h*(v-1)],     10, color2, 2);
+  circle(image_right, centers_right[h*(v-1)+h-1], 10, color2, 2);
 
 
   // undistortPoints() to undistort and rectify the 4 outermost points
@@ -65,6 +71,10 @@ int main(int argc, char** argv )
   // add circles to the 4 points on the image pairs & x,y,z information
 
   // in the writeup, put explanation describing the difference between key functions - above and beyond
+
+  // display left and right images
+  imshow("Task 1 Left", image_left);
+  imshow("Task 1 Right", image_right);
 
   // wait for a new key input
   int key = waitKey();
