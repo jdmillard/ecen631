@@ -187,7 +187,129 @@ int main(int argc, char** argv )
    //    //     //  //////  //    //    /////////
 
 
-  // starting
+  // this task will import the stereo pairs
+  // at each iteration, the ball is found in the roi, then roi is updated
+
+  Mat key_image_left, key_image_right,
+      image_left_mod, image_right_mod;
+
+  namedWindow("Task 2 Left", CV_WINDOW_AUTOSIZE);
+  namedWindow("Task 2 Right", CV_WINDOW_AUTOSIZE);
+  moveWindow("Task 2 Left", 50, 500);
+  moveWindow("Task 2 Right", 700, 500);
+
+  // parameters for the open operation
+  int morph_size = 2;
+  Mat element = getStructuringElement( MORPH_RECT, Size( 2*morph_size + 1, 2*morph_size+1 ), Point( morph_size, morph_size ) );
+
+  // initialize params and modify properties for the blob detector
+  SimpleBlobDetector::Params params;
+  params.thresholdStep = 10;
+  params.minThreshold = 50;
+  params.maxThreshold = 220;
+  params.minRepeatability = 2;
+  params.minDistBetweenBlobs = 10;
+  params.filterByColor = false; // true
+  params.blobColor = 0;
+  params.filterByArea = true;
+  params.minArea = 25;
+  params.maxArea = 5000;
+  params.filterByCircularity = false;
+  params.minCircularity = 0.8f;
+  params.maxCircularity = std::numeric_limits<float>::max();
+  params.filterByInertia = false; // true
+  params.minInertiaRatio = 0.1f;
+  params.maxInertiaRatio = std::numeric_limits<float>::max();
+  params.filterByConvexity = false; // true
+  params.minConvexity = 0.95f;
+  params.maxConvexity = std::numeric_limits<float>::max();
+
+  // initialize keypoints vector
+  std::vector<KeyPoint> keypoints_left;
+  std::vector<KeyPoint> keypoints_right;
+
+  // create the detector(pointer) using the params
+  Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
+
+  // loop through images, detecting the ball
+  int n_img = 1;
+  while(1)
+  {
+    // get left and right images
+    path = "../images/trajectory/Ball_testL"+std::to_string(n_img)+".bmp";
+    image_left = imread( path, 1 );
+    path = "../images/trajectory/Ball_testR"+std::to_string(n_img)+".bmp";
+    image_right = imread( path, 1 );
+
+    // test image validity
+    if ( !image_left.data || !image_right.data )
+    {
+      break;
+    }
+
+    // if image is the first image in the set, keep it for difference images
+    if (n_img == 1)
+    {
+      key_image_left = image_left.clone();
+      key_image_right = image_right.clone();
+    }
+
+    // take absolute difference between current images and keyframes
+    absdiff(image_left,  key_image_left,  image_left_mod);
+    absdiff(image_right, key_image_right, image_right_mod);
+    // convert to grayscale
+    cvtColor(image_left_mod,  image_left_mod,  CV_BGR2GRAY);
+    cvtColor(image_right_mod, image_right_mod, CV_BGR2GRAY);
+    // threshold the grayscale difference image
+    threshold(image_left_mod,  image_left_mod,  5, 255, THRESH_BINARY);
+    threshold(image_right_mod, image_right_mod, 5, 255, THRESH_BINARY);
+    // perform open operation
+    morphologyEx(image_left_mod,  image_left_mod,  MORPH_OPEN, element );
+    morphologyEx(image_right_mod, image_right_mod, MORPH_OPEN, element );
+    // use blob detector to populate the vector of keypoints
+    detector->detect( image_left_mod,  keypoints_left );
+    detector->detect( image_right_mod, keypoints_right );
+    // draw points on main image
+    drawKeypoints(image_left,  keypoints_left,  image_left,  Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    drawKeypoints(image_right, keypoints_right, image_right, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+
+
+    // implement ROI
+    // put image x floor on ROI to avoid the motion blur data
+
+
+    imshow("Task 2 Left", image_left);
+    imshow("Task 2 Right", image_right);
+
+    // wait for a new key input
+    key = waitKey();
+    if (key == 110)
+    {
+      // the 'n' (next) key was pressed, continue to next image
+    }
+    else if (key == 27)
+    {
+      // the 'esc' key was pressed, end application
+      std::cout << "terminating" << std::endl;
+      break;
+    }
+
+    n_img++;
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   printf("finished \n");
   return 0;
