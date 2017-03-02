@@ -261,6 +261,14 @@ int main(int argc, char** argv )
       key_image_right = image_right.clone();
     }
 
+    // extract the roi
+    /*
+    image_left = image_left_orig(Rect(roi_left.x-roi_x, roi_left.y-roi_y, roi_x*2, roi_y*2));
+    image_right =
+    key_image_left =
+    key_image_right =
+    */
+
     // take absolute difference between current images and keyframes
     absdiff(image_left,  key_image_left,  image_left_mod);
     absdiff(image_right, key_image_right, image_right_mod);
