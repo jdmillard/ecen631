@@ -36,7 +36,7 @@ int main(int argc, char** argv )
                         intrinsic_left,  intrinsic_right,
                         distortion_left, distortion_right,
                         R,  T,  E,  F,
-                        R1, R2, P1, P2;
+                        R1, R2, P1, P2, Q;
 
   namedWindow("Task 1 Left", CV_WINDOW_AUTOSIZE);
   namedWindow("Task 1 Right", CV_WINDOW_AUTOSIZE);
@@ -100,11 +100,12 @@ int main(int argc, char** argv )
   fsr3.release();
   // load existing rectification parameters
   FileStorage fsr4("rectification_final.xml", FileStorage::READ);
-  fsr3["R1"] >> R1;
-  fsr3["R2"] >> R2;
-  fsr3["P1"] >> P1;
-  fsr3["P2"] >> P2;
-  fsr3.release();
+  fsr4["R1"] >> R1;
+  fsr4["R2"] >> R2;
+  fsr4["P1"] >> P1;
+  fsr4["P2"] >> P2;
+  fsr4["Q"]  >> Q;
+  fsr4.release();
 
   // undistort the 4 corner points of left and right
   undistortPoints(centers4_left,   centers4_left,
@@ -114,8 +115,27 @@ int main(int argc, char** argv )
                   intrinsic_right, distortion_right,
                   R2,              P2);
 
+  // populate vector of Point3f by cycling through each point
+  for (int i=0; i < centers4_left.size() ; i++)
+  {
+    centers3d_left.push_back( Point3f(centers4_left[i].x,  centers4_left[i].y,  centers4_left[i].x-centers4_right[i].x));
+    centers3d_right.push_back(Point3f(centers4_right[i].x, centers4_right[i].y, centers4_left[i].x-centers4_right[i].x));
+    std::cout << i << std::endl;
+  }
+  //std::cout << centers3d_left << std::endl;
+  //std::cout << centers3d_right << std::endl;
+
   // transform the points to calculate 3D information of 4 points
-  //perspectiveTransform(centers4_left, centers4_left, )
+  perspectiveTransform(centers3d_left,  centers3d_left, Q);
+  perspectiveTransform(centers3d_right, centers3d_right, Q);
+  std::cout << centers3d_left << std::endl;
+  std::cout << centers3d_right << std::endl;
+
+
+
+
+
+
 
   // in the writeup, put explanation describing the difference between key functions - above and beyond
 
