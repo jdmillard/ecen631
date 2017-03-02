@@ -190,8 +190,10 @@ int main(int argc, char** argv )
   // this task will import the stereo pairs
   // at each iteration, the ball is found in the roi, then roi is updated
 
-  Mat key_image_left, key_image_right,
-      image_left_mod, image_right_mod;
+  Mat key_image_left,       key_image_right,
+      image_left_mod,       image_right_mod,
+      image_left_roi,       image_right_roi,
+      key_image_left_roi,   key_image_right_roi;
 
   namedWindow("Task 2 Left", CV_WINDOW_AUTOSIZE);
   namedWindow("Task 2 Right", CV_WINDOW_AUTOSIZE);
@@ -235,8 +237,8 @@ int main(int argc, char** argv )
   Point2f roi_left  = Point2f(357, 115);
   Point2f roi_right = Point2f(285, 122);
   // define height and width of ROI
-  float roi_x = 50; // roi width  / 2
-  float roi_y = 50; // roi height / 2
+  float roi_x = 65; // roi width  / 2
+  float roi_y = 65; // roi height / 2
 
   // loop through images, detecting the ball
   int n_img = 1;
@@ -261,17 +263,15 @@ int main(int argc, char** argv )
       key_image_right = image_right.clone();
     }
 
-    // extract the roi
-    /*
-    image_left = image_left_orig(Rect(roi_left.x-roi_x, roi_left.y-roi_y, roi_x*2, roi_y*2));
-    image_right =
-    key_image_left =
-    key_image_right =
-    */
+    // extract the roi using the updated roi center value
+    image_left_roi =      image_left(     Rect(roi_left.x-roi_x,  roi_left.y-roi_y,  roi_x*2, roi_y*2));
+    key_image_left_roi =  key_image_left( Rect(roi_left.x-roi_x,  roi_left.y-roi_y,  roi_x*2, roi_y*2));
+    image_right_roi =     image_right(    Rect(roi_right.x-roi_x, roi_right.y-roi_y, roi_x*2, roi_y*2));
+    key_image_right_roi = key_image_right(Rect(roi_right.x-roi_x, roi_right.y-roi_y, roi_x*2, roi_y*2));
 
     // take absolute difference between current images and keyframes
-    absdiff(image_left,  key_image_left,  image_left_mod);
-    absdiff(image_right, key_image_right, image_right_mod);
+    absdiff(image_left_roi,  key_image_left_roi,  image_left_mod);
+    absdiff(image_right_roi, key_image_right_roi, image_right_mod);
     // convert to grayscale
     cvtColor(image_left_mod,  image_left_mod,  CV_BGR2GRAY);
     cvtColor(image_right_mod, image_right_mod, CV_BGR2GRAY);
@@ -285,38 +285,73 @@ int main(int argc, char** argv )
     detector->detect( image_left_mod,  keypoints_left );
     detector->detect( image_right_mod, keypoints_right );
     // draw points on main image
+    // first shift keypoint locations back up based on roi extraction
+    for (int i=0; i < keypoints_left.size() ; i++)
+    {
+      keypoints_left[i].pt.x = keypoints_left[i].pt.x + roi_left.x-roi_x;
+      keypoints_left[i].pt.y = keypoints_left[i].pt.y + roi_left.y-roi_y;
+    }
+    for (int i=0; i < keypoints_right.size() ; i++)
+    {
+      keypoints_right[i].pt.x = keypoints_right[i].pt.x + roi_right.x-roi_x;
+      keypoints_right[i].pt.y = keypoints_right[i].pt.y + roi_right.y-roi_y;
+    }
     drawKeypoints(image_left,  keypoints_left,  image_left,  Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
     drawKeypoints(image_right, keypoints_right, image_right, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
 
 
+    // draw ROI that was used
+    // define upper left and lower right corners of ROI
+    Point2f ul_left = Point2f(roi_left.x-roi_x, roi_left.y-roi_y);
+    Point2f lr_left = Point2f(roi_left.x+roi_x, roi_left.y+roi_y);
+    Point2f ul_right = Point2f(roi_right.x-roi_x, roi_right.y-roi_y);
+    Point2f lr_right = Point2f(roi_right.x+roi_x, roi_right.y+roi_y);
+
+    rectangle(image_left, ul_left, lr_left, color1, 2);
+    rectangle(image_right, ul_right, lr_right, color1, 2);
+
 
     // update ROI
-    float x_sum = 0.0;
-    float y_sum = 0.0;
+    float x_sum_left = 0.0;
+    float y_sum_left = 0.0;
+    float x_sum_right = 0.0;
+    float y_sum_right = 0.0;
     int i;
-    // average the locations of the keypoints
+    // average the locations of the left keypoints
     for (i=0; i < keypoints_left.size() ; i++)
     {
-      x_sum = x_sum + keypoints_left[i].pt.x;
-      y_sum = y_sum + keypoints_left[i].pt.y;
+      x_sum_left = x_sum_left + keypoints_left[i].pt.x;
+      y_sum_left = y_sum_left + keypoints_left[i].pt.y;
     }
     // if keypoints were found, update roi center
-    if (x_sum > 0 && y_sum > 0)
+    if (x_sum_left > 0 && y_sum_left > 0)
     {
-      roi_left.x = x_sum/i;
-      roi_left.y = y_sum/i;
+      roi_left.x = x_sum_left/i;
+      roi_left.y = y_sum_left/i;
+    }
+    // average the location sof the right keypoints
+    for (i=0; i < keypoints_right.size() ; i++)
+    {
+      x_sum_right = x_sum_right + keypoints_right[i].pt.x;
+      y_sum_right = y_sum_right + keypoints_right[i].pt.y;
+    }
+    // if keypoints were found, update roi center
+    if (x_sum_right > 0 && y_sum_right > 0)
+    {
+      roi_right.x = x_sum_right/i;
+      roi_right.y = y_sum_right/i;
     }
 
-
     // draw updated ROI
-    //circle(image_left, roi_left, 10, color1, 2);
     // define upper left and lower right corners of ROI
-    Point2f ul = Point2f(roi_left.x-roi_x, roi_left.y-roi_y);
-    Point2f lr = Point2f(roi_left.x+roi_x, roi_left.y+roi_y);
-    //circle(image_left, ul, 10, color2, 2);
-    //circle(image_left, lr, 10, color2, 2);
-    rectangle(image_left, ul, lr, color1, 2);
+    ul_left = Point2f(roi_left.x-roi_x, roi_left.y-roi_y);
+    lr_left = Point2f(roi_left.x+roi_x, roi_left.y+roi_y);
+    ul_right = Point2f(roi_right.x-roi_x, roi_right.y-roi_y);
+    lr_right = Point2f(roi_right.x+roi_x, roi_right.y+roi_y);
+
+    rectangle(image_left, ul_left, lr_left, color2, 2);
+    rectangle(image_right, ul_right, lr_right, color2, 2);
 
 
 
