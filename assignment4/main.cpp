@@ -366,6 +366,88 @@ int main(int argc, char** argv )
       rectangle(image_right, ul_right, lr_right, color2, 2);
       */
 
+////////    ///     //////  //    //     ///////
+   //      // //   //    // //   //     //     //
+   //     //   //  //       //  //             //
+   //    //     //  //////  /////        ///////
+   //    /////////       // //  //             //
+   //    //     // //    // //   //     //     //
+   //    //     //  //////  //    //     ///////
+
+      // still in loop !!!
+      // now the points roi_left and roi_right are the ball centers
+
+      std::vector<Point2f>  ball_left,   ball_right,
+                            ball_u_left, ball_u_right;
+
+      // put ball center into an 1-element array for undistortion
+      if (ball_left.size() == 0)
+      {
+        ball_left.push_back(roi_left);
+        ball_right.push_back(roi_right);
+      }
+      else
+      {
+        ball_left[0]  = roi_left;
+        ball_right[0] = roi_right;
+      }
+
+      // undistort the 4 corner points of left and right
+      undistortPoints(ball_left,       ball_u_left,
+                      intrinsic_left,  distortion_left,
+                      R1,              P1);
+      undistortPoints(ball_right,      ball_u_right,
+                      intrinsic_right, distortion_right,
+                      R2,              P2);
+
+      // populate vector of Point3f by cycling through each point
+      centers3d_left.clear();
+      centers3d_right.clear();
+      for (int i=0; i < ball_u_left.size() ; i++)
+      {
+        centers3d_left.push_back( Point3f(ball_u_left[i].x,  ball_u_left[i].y,  ball_u_left[i].x-ball_u_right[i].x));
+        centers3d_right.push_back(Point3f(ball_u_right[i].x, ball_u_right[i].y, ball_u_left[i].x-ball_u_right[i].x));
+      }
+
+      /*
+      // transform the points to calculate 3D information of 4 points
+      perspectiveTransform(centers3d_left,  centers3d_left, Q);
+      perspectiveTransform(centers3d_right, centers3d_right, Q);
+      std::cout << centers3d_left << std::endl;
+      std::cout << centers3d_right << std::endl;
+
+      // display 3D information
+      for (int i=0; i < ball_u_left.size() ; i++)
+      {
+        // get text format of this iteration's x, y, z for left image
+        x_str = "x="+std::to_string(centers3d_left[i].x).substr(0,5);
+        y_str = "y="+std::to_string(centers3d_left[i].y).substr(0,5);
+        z_str = "z="+std::to_string(centers3d_left[i].z).substr(0,5);
+        place.x = centers4_left[i].x + 15;
+        place.y = centers4_left[i].y;
+        putText(image_left, x_str, place, FONT_HERSHEY_SIMPLEX, 0.6, color1, 2);
+        place.y = place.y + 20;
+        putText(image_left, y_str, place, FONT_HERSHEY_SIMPLEX, 0.6, color1, 2);
+        place.y = place.y + 20;
+        putText(image_left, z_str, place, FONT_HERSHEY_SIMPLEX, 0.6, color1, 2);
+
+        // get text format of this iteration's x, y, z for right image
+        x_str = "x="+std::to_string(centers3d_right[i].x).substr(0,5);
+        y_str = "y="+std::to_string(centers3d_right[i].y).substr(0,5);
+        z_str = "z="+std::to_string(centers3d_right[i].z).substr(0,5);
+        place.x = centers4_right[i].x + 15;
+        place.y = centers4_right[i].y;
+        putText(image_right, x_str, place, FONT_HERSHEY_SIMPLEX, 0.6, color2, 2);
+        place.y = place.y + 20;
+        putText(image_right, y_str, place, FONT_HERSHEY_SIMPLEX, 0.6, color2, 2);
+        place.y = place.y + 20;
+        putText(image_right, z_str, place, FONT_HERSHEY_SIMPLEX, 0.6, color2, 2);
+
+      }
+
+*/
+
+
 
 
     }
