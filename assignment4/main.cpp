@@ -231,6 +231,13 @@ int main(int argc, char** argv )
   // create the detector(pointer) using the params
   Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
 
+  // define initial centers of ROI
+  Point2f roi_left  = Point2f(357, 115);
+  Point2f roi_right = Point2f(285, 122);
+  // define height and width of ROI
+  float roi_x = 50; // roi width  / 2
+  float roi_y = 50; // roi height / 2
+
   // loop through images, detecting the ball
   int n_img = 1;
   while(1)
@@ -274,8 +281,36 @@ int main(int argc, char** argv )
     drawKeypoints(image_right, keypoints_right, image_right, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
 
-    // implement ROI
-    // put image x floor on ROI to avoid the motion blur data
+
+
+    // update ROI
+    float x_sum = 0.0;
+    float y_sum = 0.0;
+    int i;
+    // average the locations of the keypoints
+    for (i=0; i < keypoints_left.size() ; i++)
+    {
+      x_sum = x_sum + keypoints_left[i].pt.x;
+      y_sum = y_sum + keypoints_left[i].pt.y;
+    }
+    // if keypoints were found, update roi center
+    if (x_sum > 0 && y_sum > 0)
+    {
+      roi_left.x = x_sum/i;
+      roi_left.y = y_sum/i;
+    }
+
+
+    // draw updated ROI
+    //circle(image_left, roi_left, 10, color1, 2);
+    // define upper left and lower right corners of ROI
+    Point2f ul = Point2f(roi_left.x-roi_x, roi_left.y-roi_y);
+    Point2f lr = Point2f(roi_left.x+roi_x, roi_left.y+roi_y);
+    //circle(image_left, ul, 10, color2, 2);
+    //circle(image_left, lr, 10, color2, 2);
+    rectangle(image_left, ul, lr, color1, 2);
+
+
 
 
     imshow("Task 2 Left", image_left);
