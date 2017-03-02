@@ -25,12 +25,13 @@ int main(int argc, char** argv )
 
   bool                  found;
 
-  std::string           path;
+  std::string           path, x_str, y_str, z_str;
   std::vector<Point2f>  centers_left,    centers_right,   // point centers
                         centers4_left,   centers4_right,  // centers of main 4
                         centers4u_left,  centers4u_right; // undistorted
   std::vector<Point3f>  centers3d_left,  centers3d_right; // 3d version
 
+  Point2f               place;
   Size                  patternsize(h,v);
   Mat                   image_left,      image_right,
                         image_left_gray, image_right_gray,
@@ -130,8 +131,6 @@ int main(int argc, char** argv )
   std::cout << centers3d_right << std::endl;
 
   // display 3D information
-  std::string x_str, y_str, z_str;
-  Point2f place;
   for (int i=0; i < centers4u_left.size() ; i++)
   {
     // get text format of this iteration's x, y, z for left image
@@ -178,6 +177,17 @@ int main(int argc, char** argv )
     return -1;
   }
 
+
+////////    ///     //////  //    //     ///////
+   //      // //   //    // //   //     //     //
+   //     //   //  //       //  //             //
+   //    //     //  //////  /////        ///////
+   //    /////////       // //  //      //
+   //    //     // //    // //   //     //
+   //    //     //  //////  //    //    /////////
+
+
+  // starting
 
   printf("finished \n");
   return 0;
