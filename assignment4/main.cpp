@@ -266,7 +266,9 @@ int main(int argc, char** argv )
     // only process images if roi signifies distant ball
     if ( (roi_left.y+roi_y > 418) || (roi_right.y+roi_y > 418) )
     {
-      std::cout << "ball too close" << std::endl;
+      //std::cout << "ball too close" << std::endl;
+      putText(image_left,  "ball too close", Point(35, 440), FONT_HERSHEY_SIMPLEX, 1, color1, 2);
+      putText(image_right, "ball too close", Point(35, 440), FONT_HERSHEY_SIMPLEX, 1, color1, 2);
     }
     else
     {
@@ -352,6 +354,7 @@ int main(int argc, char** argv )
         roi_right.y = y_sum_right/i;
       }
 
+      /*
       // draw updated ROI
       // define upper left and lower right corners of ROI
       ul_left = Point2f(roi_left.x-roi_x, roi_left.y-roi_y);
@@ -361,6 +364,7 @@ int main(int argc, char** argv )
 
       rectangle(image_left, ul_left, lr_left, color2, 2);
       rectangle(image_right, ul_right, lr_right, color2, 2);
+      */
 
 
 
