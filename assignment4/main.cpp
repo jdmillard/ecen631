@@ -26,8 +26,9 @@ int main(int argc, char** argv )
   bool                  found;
 
   std::string           path;
-  std::vector<Point2f>  centers_left,  centers4_left;
-  std::vector<Point2f>  centers_right, centers4_right;
+  std::vector<Point2f>  centers_left,    centers_right;
+  std::vector<Point2f>  centers4_left,   centers4_right;
+  std::vector<Point3f>  centers3d_left,  centers3d_right;
 
   Size                  patternsize(h,v);
   Mat                   image_left,      image_right,
@@ -113,10 +114,8 @@ int main(int argc, char** argv )
                   intrinsic_right, distortion_right,
                   R2,              P2);
 
-
-
-  // perspectiveTransform() to calculate 3D information of 4 points
-  // add circles to the 4 points on the image pairs & x,y,z information
+  // transform the points to calculate 3D information of 4 points
+  //perspectiveTransform(centers4_left, centers4_left, )
 
   // in the writeup, put explanation describing the difference between key functions - above and beyond
 
