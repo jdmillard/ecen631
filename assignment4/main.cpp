@@ -26,9 +26,10 @@ int main(int argc, char** argv )
   bool                  found;
 
   std::string           path;
-  std::vector<Point2f>  centers_left,    centers_right;
-  std::vector<Point2f>  centers4_left,   centers4_right;
-  std::vector<Point3f>  centers3d_left,  centers3d_right;
+  std::vector<Point2f>  centers_left,    centers_right,   // point centers
+                        centers4_left,   centers4_right,  // centers of main 4
+                        centers4u_left,  centers4u_right; // undistorted
+  std::vector<Point3f>  centers3d_left,  centers3d_right; // 3d version
 
   Size                  patternsize(h,v);
   Mat                   image_left,      image_right,
@@ -108,22 +109,19 @@ int main(int argc, char** argv )
   fsr4.release();
 
   // undistort the 4 corner points of left and right
-  undistortPoints(centers4_left,   centers4_left,
+  undistortPoints(centers4_left,   centers4u_left,
                   intrinsic_left,  distortion_left,
                   R1,              P1);
-  undistortPoints(centers4_right,  centers4_right,
+  undistortPoints(centers4_right,  centers4u_right,
                   intrinsic_right, distortion_right,
                   R2,              P2);
 
   // populate vector of Point3f by cycling through each point
-  for (int i=0; i < centers4_left.size() ; i++)
+  for (int i=0; i < centers4u_left.size() ; i++)
   {
-    centers3d_left.push_back( Point3f(centers4_left[i].x,  centers4_left[i].y,  centers4_left[i].x-centers4_right[i].x));
-    centers3d_right.push_back(Point3f(centers4_right[i].x, centers4_right[i].y, centers4_left[i].x-centers4_right[i].x));
-    std::cout << i << std::endl;
+    centers3d_left.push_back( Point3f(centers4u_left[i].x,  centers4u_left[i].y,  centers4u_left[i].x-centers4u_right[i].x));
+    centers3d_right.push_back(Point3f(centers4u_right[i].x, centers4u_right[i].y, centers4u_left[i].x-centers4u_right[i].x));
   }
-  //std::cout << centers3d_left << std::endl;
-  //std::cout << centers3d_right << std::endl;
 
   // transform the points to calculate 3D information of 4 points
   perspectiveTransform(centers3d_left,  centers3d_left, Q);
@@ -131,13 +129,37 @@ int main(int argc, char** argv )
   std::cout << centers3d_left << std::endl;
   std::cout << centers3d_right << std::endl;
 
+  // display 3D information
+  std::string x_str, y_str, z_str;
+  Point2f place;
+  for (int i=0; i < centers4u_left.size() ; i++)
+  {
+    // get text format of this iteration's x, y, z for left image
+    x_str = "x="+std::to_string(centers3d_left[i].x).substr(0,5);
+    y_str = "y="+std::to_string(centers3d_left[i].y).substr(0,5);
+    z_str = "z="+std::to_string(centers3d_left[i].z).substr(0,5);
+    place.x = centers4_left[i].x + 15;
+    place.y = centers4_left[i].y;
+    putText(image_left, x_str, place, FONT_HERSHEY_SIMPLEX, 0.6, color1, 2);
+    place.y = place.y + 20;
+    putText(image_left, y_str, place, FONT_HERSHEY_SIMPLEX, 0.6, color1, 2);
+    place.y = place.y + 20;
+    putText(image_left, z_str, place, FONT_HERSHEY_SIMPLEX, 0.6, color1, 2);
 
+    // get text format of this iteration's x, y, z for right image
+    x_str = "x="+std::to_string(centers3d_right[i].x).substr(0,5);
+    y_str = "y="+std::to_string(centers3d_right[i].y).substr(0,5);
+    z_str = "z="+std::to_string(centers3d_right[i].z).substr(0,5);
+    place.x = centers4_right[i].x + 15;
+    place.y = centers4_right[i].y;
+    putText(image_right, x_str, place, FONT_HERSHEY_SIMPLEX, 0.6, color2, 2);
+    place.y = place.y + 20;
+    putText(image_right, y_str, place, FONT_HERSHEY_SIMPLEX, 0.6, color2, 2);
+    place.y = place.y + 20;
+    putText(image_right, z_str, place, FONT_HERSHEY_SIMPLEX, 0.6, color2, 2);
 
+  }
 
-
-
-
-  // in the writeup, put explanation describing the difference between key functions - above and beyond
 
   // display left and right images
   imshow("Task 1 Left", image_left);
