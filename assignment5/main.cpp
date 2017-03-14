@@ -141,6 +141,10 @@ int main(int argc, char** argv )
         // display images a and b
         imshow("Task 1 A", image_a_mod);
         imshow("Task 1 B", image_b_mod);
+
+        // PUT INTO AVI, save and commit
+        // DO VARIOUS STRIDE VALUES
+
       }
 
       // wait for a new key input after operations and display are complete
