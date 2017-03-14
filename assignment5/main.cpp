@@ -4,6 +4,25 @@
 
 using namespace cv;
 
+void drawPoints(Mat img, std::vector<Point2f>& points){
+  for (int i=0; i < points.size(); i++){
+    circle(img, points[i], 2, Scalar(0, 255, 0), 2);
+  }
+}
+
+void drawRedLines(Mat img, std::vector<Point2f>& points_a,
+                           std::vector<Point2f>& points_b,
+                           std::vector<uchar>&   status_vec){
+  uint status; // for conversion of uchar to uint
+  for (int i=0; i < status_vec.size(); i++){
+    status = status_vec[i];
+    if (status == 1){
+      // plot stuffs here
+      arrowedLine(img, points_a[i], points_b[i], Scalar(0, 0, 255), 2);
+    }
+  }
+}
+
 
 int main(int argc, char** argv )
 {
@@ -42,7 +61,10 @@ int main(int argc, char** argv )
   nn.push_back(18);
   nn.push_back(19);
 
-  Mat image_a, image_b;
+  std::vector<Point2f> features_a, features_b;
+
+  Mat image_a, image_a_mod,
+      image_b, image_b_mod;
   int gap = 3; // the gap between images in sequence
 
   namedWindow("Task 1 A", CV_WINDOW_AUTOSIZE);
@@ -51,10 +73,10 @@ int main(int argc, char** argv )
   moveWindow("Task 1 B", 700, 50);
 
 
-  // cycle through image set types
-  for (int i=0; i<5; i++){
+  // cycle through image set types (for taks 1, "i<1")
+  for (int i=0; i<1; i++){
     // cycle through the images of each set
-    for (int j=1; j<= nn[i]; j++){
+    for (int j=1; j<= nn[i]; j=j+gap){
 
       // get images
       path = "../images/" + set[i] + "/" + prefix[i] + std::to_string(j) + ".jpg";
@@ -67,16 +89,58 @@ int main(int argc, char** argv )
         //printf("No image data \n");
         break;
       } else {
+
+        // perform operations here between a and b: convert to gray
+        cvtColor(image_a, image_a_mod, CV_BGR2GRAY);
+        cvtColor(image_b, image_b_mod, CV_BGR2GRAY);
+
+        // goodFeaturesToTrack for first image in sequence
+        if (j==1){
+          int max_points = 500;
+          double quality = 0.01;
+          double min_dist = 10;
+          Mat mask;
+          int blockSize = 3;
+          bool useHarrisDetector = false;
+          double k = 0.04;
+          goodFeaturesToTrack(image_a_mod, features_a, max_points, quality, min_dist, mask, blockSize, useHarrisDetector, k);
+        } else {
+          features_a.clear();
+          features_a = features_b;
+          features_b.clear();
+        }
+
+        // LK pyramid method to get features_b, create pyramids
+        std::vector<Mat> pyramid_a, pyramid_b;
+        Size pyr_win = Size(21,21);
+        int pyr_max_lvl = 3;
+        buildOpticalFlowPyramid(image_a_mod, pyramid_a, pyr_win, pyr_max_lvl);
+        buildOpticalFlowPyramid(image_b_mod, pyramid_b, pyr_win, pyr_max_lvl);
+
+        // perform optical flow
+        std::vector<uchar> status;
+        std::vector<float> err;
+        TermCriteria criteria = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 0.01);
+        int flags = 0;
+        double minEigThreshold = 1e-4;
+        calcOpticalFlowPyrLK	(	pyramid_a,    pyramid_b,
+                                features_a,   features_b,
+                                status,       err,
+                                pyr_win, pyr_max_lvl, criteria,
+                                flags, minEigThreshold);
+
+        // convert color back to BGR
+        cvtColor(image_a_mod, image_a_mod, CV_GRAY2BGR);
+        cvtColor(image_b_mod, image_b_mod, CV_GRAY2BGR);
+
+        // draw feature points and red lines
+        drawPoints(image_a_mod, features_a);
+        drawPoints(image_b_mod, features_b);
+        drawRedLines(image_a_mod, features_a, features_b, status);
+
         // display images a and b
-        imshow("Task 1 A", image_a);
-        imshow("Task 1 B", image_b);
-
-
-        // perform operations here between a and b
-
-
-
-
+        imshow("Task 1 A", image_a_mod);
+        imshow("Task 1 B", image_b_mod);
       }
 
       // wait for a new key input after operations and display are complete
@@ -90,15 +154,8 @@ int main(int argc, char** argv )
       }
 
 
-
-
-
-
-
-
-    }
-
-  }
+    } // end for loop
+  } // end for loop
 
 
   printf("finished \n");
