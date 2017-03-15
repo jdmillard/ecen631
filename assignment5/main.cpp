@@ -66,11 +66,19 @@ int main(int argc, char** argv )
   Mat image_a, image_a_mod,
       image_b, image_b_mod;
   int gap = 3; // the gap between images in sequence
+  String file = "task1_gap" + std::to_string(gap) + ".avi";
 
   namedWindow("Task 1 A", CV_WINDOW_AUTOSIZE);
   namedWindow("Task 1 B", CV_WINDOW_AUTOSIZE);
   moveWindow("Task 1 A", 50, 50);
   moveWindow("Task 1 B", 700, 50);
+
+  VideoWriter VOut;         // Create a video write object.
+  // initialize video write object
+  VOut.open(file, CV_FOURCC('M', 'P', 'E', 'G') , 30, Size(640, 480), 1);
+  // alternative syntax if missing codec
+  //VOut.open("VideoOut.avi", -1 , 30, Size(640, 480), 1);
+
 
 
   // cycle through image set types (for taks 1, "i<1")
@@ -143,6 +151,7 @@ int main(int argc, char** argv )
         imshow("Task 1 B", image_b_mod);
 
         // PUT INTO AVI, save and commit
+        VOut << image_a_mod;            // save frame to video file
         // DO VARIOUS STRIDE VALUES
 
       }
