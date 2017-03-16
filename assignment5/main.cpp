@@ -160,9 +160,7 @@ int main(int argc, char** argv )
             imshow("Task 1 A", image_a_mod);
             imshow("Task 1 B", image_b_mod);
 
-            // PUT INTO AVI, save and commit
             VOut << image_a_mod;            // save frame to video file
-            // DO VARIOUS STRIDE VALUES
 
           }
 
@@ -302,51 +300,24 @@ int main(int argc, char** argv )
               // window established in next image
               Mat tem = image_a_mod(Rect(x2, y2, dim_tem, dim_tem));
 
+              // match the current template of image 1 to window of image 2
+              Mat output;
+              matchTemplate(win, tem, output, TM_CCORR_NORMED);
 
-              Mat outtest;
-              /*
-              namedWindow("orig", CV_WINDOW_AUTOSIZE);
-              namedWindow("tem", CV_WINDOW_AUTOSIZE);
-              namedWindow("win", CV_WINDOW_AUTOSIZE);
-              namedWindow("out", CV_WINDOW_AUTOSIZE);
-              */
+              // normalize the intensity output
+              normalize(output, output, 0, 1, NORM_MINMAX,  -1, Mat());
 
-              matchTemplate(win, tem, outtest, TM_CCORR_NORMED);
+              // locate the position of highest correlation
+              Point max_point;
+              minMaxLoc(output, 0, 0, 0, &max_point, Mat());
 
-              normalize(outtest, outtest, 0, 1, NORM_MINMAX,  -1, Mat());
-              Point maxtest;
-              minMaxLoc(outtest, 0, 0, 0, &maxtest, Mat());
+              // represent the max point in original image coordinates
+              max_point.x = max_point.x + dim_tem/2 + x1;
+              max_point.y = max_point.y + dim_tem/2 + y1;
 
-              /*
-              circle(outtest, maxtest, 7, Scalar(255,0,0), 2, 2);
-              circle(image_a_mod, features_a[k], 7, Scalar(255,0,0), 2, 2);
-              */
-
-              maxtest.x = maxtest.x + dim_tem/2 + x1;
-              maxtest.y = maxtest.y + dim_tem/2 + y1;
-              features_b.push_back(maxtest);
-
-
-              /*
-              imshow("orig", image_a_mod);
-              imshow("tem", tem);
-              imshow("win", win);
-              imshow("out", outtest);
-
-
-              int key = waitKey();
-              if (key == 110) {
-                // the 'n' (next) key was pressed
-              } else if (key == 27) {
-                // the 'esc' key was pressed, end application
-                std::cout << "terminating" << std::endl;
-                return -1;
-              }
-              */
-
-
+              // populate the vector of features_b
+              features_b.push_back(max_point);
             }
-
 
             // convert color back to BGR
             cvtColor(image_a_mod, image_a_mod, CV_GRAY2BGR);
@@ -361,9 +332,7 @@ int main(int argc, char** argv )
             imshow("Task 2 A", image_a_mod);
             imshow("Task 2 B", image_b_mod);
 
-            // PUT INTO AVI, save and commit
             VOut2 << image_a_mod;            // save frame to video file
-            // DO VARIOUS STRIDE VALUES
 
           }
 
