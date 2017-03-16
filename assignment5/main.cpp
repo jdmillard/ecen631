@@ -223,6 +223,7 @@ int main(int argc, char** argv )
             cvtColor(image_a, image_a_mod, CV_BGR2GRAY);
             cvtColor(image_b, image_b_mod, CV_BGR2GRAY);
 
+            /*
             // artifacts from task 1 pasting:
             // goodFeaturesToTrack for first image in sequence
             if (j==1){
@@ -267,7 +268,7 @@ int main(int argc, char** argv )
             drawPoints(image_a_mod, features_a);
             drawPoints(image_b_mod, features_b);
             drawRedLines(image_a_mod, features_a, features_b, status);
-
+            */
             // display images a and b
             imshow("Task 2 A", image_a_mod);
             imshow("Task 2 B", image_b_mod);
