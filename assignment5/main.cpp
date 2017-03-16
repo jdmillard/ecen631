@@ -322,8 +322,8 @@ int main(int argc, char** argv )
               circle(image_a_mod, features_a[k], 7, Scalar(255,0,0), 2, 2);
               */
 
-              maxtest.x = maxtest.x + x1;
-              maxtest.y = maxtest.y + y1;
+              maxtest.x = maxtest.x + dim_tem/2 + x1;
+              maxtest.y = maxtest.y + dim_tem/2 + y1;
               features_b.push_back(maxtest);
 
 
