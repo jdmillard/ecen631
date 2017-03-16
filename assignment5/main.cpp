@@ -23,6 +23,14 @@ void drawRedLines(Mat img, std::vector<Point2f>& points_a,
   }
 }
 
+void drawRedLinesSimple(Mat img, std::vector<Point2f>& points_a,
+                                 std::vector<Point2f>& points_b){
+  for (int i=0; i < points_a.size(); i++){
+    // plot stuffs here
+    arrowedLine(img, points_a[i], points_b[i], Scalar(0, 0, 255), 2);
+  }
+}
+
 
 int main(int argc, char** argv )
 {
@@ -223,10 +231,10 @@ int main(int argc, char** argv )
             cvtColor(image_a, image_a_mod, CV_BGR2GRAY);
             cvtColor(image_b, image_b_mod, CV_BGR2GRAY);
 
-            /*
-            // artifacts from task 1 pasting:
             // goodFeaturesToTrack for first image in sequence
             if (j==1){
+              features_a.clear();
+              features_b.clear();
               int max_points = 500;
               double quality = 0.01;
               double min_dist = 10;
@@ -241,24 +249,104 @@ int main(int argc, char** argv )
               features_b.clear();
             }
 
-            // LK pyramid method to get features_b, create pyramids
-            std::vector<Mat> pyramid_a, pyramid_b;
-            Size pyr_win = Size(21,21);
-            int pyr_max_lvl = 3;
-            buildOpticalFlowPyramid(image_a_mod, pyramid_a, pyr_win, pyr_max_lvl);
-            buildOpticalFlowPyramid(image_b_mod, pyramid_b, pyr_win, pyr_max_lvl);
+            // template matching
+            int dim_win = 40;
+            int dim_tem = 10;
+            for (int k=0; k<features_a.size(); k++)
+            {
+              // create a window around features_a[k], which is Point2f
+              int x1 = features_a[k].x - dim_win/2;
+              if (x1 < 0)
+              {
+                x1 = 0;
+              }
+              if ((x1+dim_win)>640)
+              {
+                x1 = 640 - dim_win;
+              }
+              int y1 = features_a[k].y - dim_win/2;
+              if (y1 < 0)
+              {
+                y1 = 0;
+              }
+              if ((y1+dim_win)>480)
+              {
+                y1 = 480 - dim_win;
+              }
+              // window established in next image
+              Mat win = image_b_mod(Rect(x1, y1, dim_win, dim_win));
 
-            // perform optical flow
-            std::vector<uchar> status;
-            std::vector<float> err;
-            TermCriteria criteria = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 0.01);
-            int flags = 0;
-            double minEigThreshold = 1e-4;
-            calcOpticalFlowPyrLK	(	pyramid_a,    pyramid_b,
-                                    features_a,   features_b,
-                                    status,       err,
-                                    pyr_win, pyr_max_lvl, criteria,
-                                    flags, minEigThreshold);
+              // create a template around features_a[k], which is Point2f
+              int x2 = features_a[k].x - dim_tem/2;
+              if (x2 < 0)
+              {
+                x2 = 0;
+                features_a[k].x = x2 + dim_tem/2;
+              }
+              if ((x2+dim_tem)>640)
+              {
+                x2 = 640 - dim_tem;
+                features_a[k].x = x2 + dim_tem/2;
+              }
+              int y2 = features_a[k].y - dim_tem/2;
+              if (y2 < 0)
+              {
+                y2 = 0;
+                features_a[k].y = y2 + dim_tem/2;
+              }
+              if ((y2+dim_tem)>480)
+              {
+                y2 = 480 - dim_tem;
+                features_a[k].y = y2 + dim_tem/2;
+              }
+              // window established in next image
+              Mat tem = image_a_mod(Rect(x2, y2, dim_tem, dim_tem));
+
+
+              Mat outtest;
+              /*
+              namedWindow("orig", CV_WINDOW_AUTOSIZE);
+              namedWindow("tem", CV_WINDOW_AUTOSIZE);
+              namedWindow("win", CV_WINDOW_AUTOSIZE);
+              namedWindow("out", CV_WINDOW_AUTOSIZE);
+              */
+
+              matchTemplate(win, tem, outtest, TM_CCORR_NORMED);
+
+              normalize(outtest, outtest, 0, 1, NORM_MINMAX,  -1, Mat());
+              Point maxtest;
+              minMaxLoc(outtest, 0, 0, 0, &maxtest, Mat());
+
+              /*
+              circle(outtest, maxtest, 7, Scalar(255,0,0), 2, 2);
+              circle(image_a_mod, features_a[k], 7, Scalar(255,0,0), 2, 2);
+              */
+
+              maxtest.x = maxtest.x + x1;
+              maxtest.y = maxtest.y + y1;
+              features_b.push_back(maxtest);
+
+
+              /*
+              imshow("orig", image_a_mod);
+              imshow("tem", tem);
+              imshow("win", win);
+              imshow("out", outtest);
+
+
+              int key = waitKey();
+              if (key == 110) {
+                // the 'n' (next) key was pressed
+              } else if (key == 27) {
+                // the 'esc' key was pressed, end application
+                std::cout << "terminating" << std::endl;
+                return -1;
+              }
+              */
+
+
+            }
+
 
             // convert color back to BGR
             cvtColor(image_a_mod, image_a_mod, CV_GRAY2BGR);
@@ -267,8 +355,8 @@ int main(int argc, char** argv )
             // draw feature points and red lines
             drawPoints(image_a_mod, features_a);
             drawPoints(image_b_mod, features_b);
-            drawRedLines(image_a_mod, features_a, features_b, status);
-            */
+            drawRedLinesSimple(image_a_mod, features_a, features_b);
+
             // display images a and b
             imshow("Task 2 A", image_a_mod);
             imshow("Task 2 B", image_b_mod);
