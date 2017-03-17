@@ -86,7 +86,7 @@ int main(int argc, char** argv )
   // alternative syntax if missing codec
   //VOut.open("VideoOut.avi", -1 , 30, Size(640, 480), 1);
 
-  bool task1 = false;
+  bool task1 = true;
   if (task1)
   {
     for (int gap=1; gap<=3; gap++)
@@ -203,7 +203,7 @@ int main(int argc, char** argv )
   // alternative syntax if missing codec
   //VOut.open("VideoOut.avi", -1 , 30, Size(640, 480), 1);
 
-  bool task2 = false;
+  bool task2 = true;
   if (task2)
   {
     for (int gap=1; gap<=3; gap++)
@@ -248,8 +248,8 @@ int main(int argc, char** argv )
             }
 
             // template matching
-            int dim_win = 40;
-            int dim_tem = 10;
+            int dim_win = 81;
+            int dim_tem = 31;
             for (int k=0; k<features_a.size(); k++)
             {
               // create a window around features_a[k], which is Point2f
@@ -508,9 +508,6 @@ int main(int argc, char** argv )
           features_keep_a         features that are kept for final plotting
           features_keep_a_temp    used for eliminating features using status_vec
           features_keep_b_temp    used for eliminating features using status_vec
-
-
-
           */
 
           // remove outlier features
