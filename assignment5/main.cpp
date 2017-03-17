@@ -368,6 +368,8 @@ int main(int argc, char** argv )
   moveWindow("Task 3 A", 50, 50);
   moveWindow("Task 3 B", 700, 50);
 
+  std::vector<Point2f> features_keep_a, features_keep_a_temp, features_keep_b_temp;
+  Mat img_10;
   bool task3 = true;
   int gap = 1;
   if (task3)
@@ -376,6 +378,7 @@ int main(int argc, char** argv )
     // cycle through image set types
     for (int i=0; i<5; i++){
       // cycle through the images of each set
+
       for (int j=10; j<= 15; j=j+gap){
 
         // get images
@@ -407,6 +410,7 @@ int main(int argc, char** argv )
             bool useHarrisDetector = false;
             double k = 0.04;
             goodFeaturesToTrack(image_a_mod, features_a, max_points, quality, min_dist, mask, blockSize, useHarrisDetector, k);
+            features_keep_a = features_a;
           } else {
             features_a.clear();
             features_a = features_b;
@@ -493,47 +497,71 @@ int main(int argc, char** argv )
           cvtColor(image_a_mod, image_a_mod, CV_GRAY2BGR);
           cvtColor(image_b_mod, image_b_mod, CV_GRAY2BGR);
 
-          // draw feature points and red lines
-          drawPoints(image_a_mod, features_a);
-          //drawPoints(image_b_mod, features_b);
-          drawRedLines(image_a_mod, features_a, features_b, status_vec);
+
+          if (j==10)
+          {
+            img_10 = image_a_mod.clone();
+          }
+
+          /*
+          img_10                  the original image of the sequence
+          features_keep_a         features that are kept for final plotting
+          features_keep_a_temp    used for eliminating features using status_vec
+          features_keep_b_temp    used for eliminating features using status_vec
+
+
+
+          */
 
           // remove outlier features
-          std::vector<Point2f> features_temp;
+          features_keep_a_temp.clear();
+          features_keep_b_temp.clear();
+          uint status; // for conversion of uchar to uint
           for (int k = 0; k < features_b.size(); k++)
           {
-            uint status; // for conversion of uchar to uint
             status = status_vec[k];
             if (status == 1)
             {
               // current feature is an inlier, keep it
-              features_temp.push_back(features_b[k]);
+              features_keep_a_temp.push_back(features_keep_a[k]);
+              features_keep_b_temp.push_back(features_b[k]);
             }
           }
 
+          features_keep_a.clear();
+          features_keep_a = features_keep_a_temp;
+
           features_b.clear();
-          features_b = features_temp;
-          features_temp.clear();
+          features_b = features_keep_b_temp;
 
-          drawPoints(image_b_mod, features_b);
+          // only draw and plot using the original and final images
+          if (j==15)
+          {
 
+            // draw feature points and red lines
+            drawPoints(img_10, features_keep_a);
+            drawPoints(image_b_mod, features_b);
+            drawRedLines(img_10, features_keep_a, features_b, status_vec);
 
-          // display images a and b
-          imshow("Task 3 A", image_a_mod);
-          imshow("Task 3 B", image_b_mod);
-
-
+            // display images a and b
+            imshow("Task 3 A", img_10);
+            imshow("Task 3 B", image_b_mod);
+          }
 
         }
 
         // wait for a new key input after operations and display are complete
-        int key = waitKey();
-        if (key == 110) {
-          // the 'n' (next) key was pressed
-        } else if (key == 27) {
-          // the 'esc' key was pressed, end application
-          std::cout << "terminating" << std::endl;
-          return -1;
+        // if end of the sequence is reached
+        if (j==15)
+        {
+          int key = waitKey();
+          if (key == 110) {
+            // the 'n' (next) key was pressed
+          } else if (key == 27) {
+            // the 'esc' key was pressed, end application
+            std::cout << "terminating" << std::endl;
+            return -1;
+          }
         }
 
 
