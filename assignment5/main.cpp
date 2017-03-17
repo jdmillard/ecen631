@@ -394,7 +394,7 @@ int main(int argc, char** argv )
           cvtColor(image_a, image_a_mod, CV_BGR2GRAY);
           cvtColor(image_b, image_b_mod, CV_BGR2GRAY);
 
-          /*
+
           // goodFeaturesToTrack for first image in sequence
           if (j==1){
             features_a.clear();
@@ -494,7 +494,7 @@ int main(int argc, char** argv )
           drawPoints(image_b_mod, features_b);
           drawRedLinesSimple(image_a_mod, features_a, features_b);
 
-          */
+          
 
           // display images a and b
           imshow("Task 3 A", image_a_mod);
