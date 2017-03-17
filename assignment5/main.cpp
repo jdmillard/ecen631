@@ -91,7 +91,7 @@ int main(int argc, char** argv )
   {
     for (int gap=1; gap<=3; gap++)
     {
-      // cycle through image set types (for taks 1, "i<1")
+      // cycle through image set types (for task 1, "i<1")
       for (int i=0; i<1; i++){
         // cycle through the images of each set
         for (int j=1; j<= nn[i]; j=j+gap){
@@ -208,7 +208,7 @@ int main(int argc, char** argv )
   {
     for (int gap=1; gap<=3; gap++)
     {
-      // cycle through image set types (for taks 1, "i<1")
+      // cycle through image set types
       for (int i=0; i<1; i++){
         // cycle through the images of each set
         for (int j=1; j<= nn[i]; j=j+gap){
@@ -373,7 +373,7 @@ int main(int argc, char** argv )
   if (task3)
   {
 
-    // cycle through image set types (for taks 1, "i<1")
+    // cycle through image set types
     for (int i=0; i<5; i++){
       // cycle through the images of each set
       for (int j=10; j<= 15; j=j+gap){
@@ -396,10 +396,10 @@ int main(int argc, char** argv )
 
 
           // goodFeaturesToTrack for first image in sequence
-          if (j==1){
+          if (j==10){
             features_a.clear();
             features_b.clear();
-            int max_points = 500;
+            int max_points = 1000;
             double quality = 0.01;
             double min_dist = 10;
             Mat mask;
@@ -414,8 +414,8 @@ int main(int argc, char** argv )
           }
 
           // template matching
-          int dim_win = 40;
-          int dim_tem = 10;
+          int dim_win = 81;
+          int dim_tem = 31;
           for (int k=0; k<features_a.size(); k++)
           {
             // create a window around features_a[k], which is Point2f
@@ -485,16 +485,38 @@ int main(int argc, char** argv )
             features_b.push_back(max_point);
           }
 
+          // find the fundamental matrix, get list of outliers
+          std::vector<uchar> status_vec;
+          Mat F = findFundamentalMat(features_a, features_b, FM_RANSAC, 3.0, 0.99, status_vec);
+
           // convert color back to BGR
           cvtColor(image_a_mod, image_a_mod, CV_GRAY2BGR);
           cvtColor(image_b_mod, image_b_mod, CV_GRAY2BGR);
 
           // draw feature points and red lines
           drawPoints(image_a_mod, features_a);
-          drawPoints(image_b_mod, features_b);
-          drawRedLinesSimple(image_a_mod, features_a, features_b);
+          //drawPoints(image_b_mod, features_b);
+          drawRedLines(image_a_mod, features_a, features_b, status_vec);
 
-          
+          // remove outlier features
+          std::vector<Point2f> features_temp;
+          for (int k = 0; k < features_b.size(); k++)
+          {
+            uint status; // for conversion of uchar to uint
+            status = status_vec[k];
+            if (status == 1)
+            {
+              // current feature is an inlier, keep it
+              features_temp.push_back(features_b[k]);
+            }
+          }
+
+          features_b.clear();
+          features_b = features_temp;
+          features_temp.clear();
+
+          drawPoints(image_b_mod, features_b);
+
 
           // display images a and b
           imshow("Task 3 A", image_a_mod);
