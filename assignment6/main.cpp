@@ -293,13 +293,14 @@ int main(int argc, char** argv )
           features_keep_b_temp.push_back(features_b[kk]);
         }
       }
-      */
+
 
       features_keep_a.clear();
       features_keep_a = features_keep_a_temp;
 
       features_b.clear();
       features_b = features_keep_b_temp;
+      */
 
 
       // find the homography matricies
@@ -309,11 +310,11 @@ int main(int argc, char** argv )
 
       // undistort the images
       // use estimated camera matrix and distortion coefficients
-      FileStorage fsr2("calibration_guess_final.xml", FileStorage::READ);
+      FileStorage fsr1("calibration_guess_final.xml", FileStorage::READ);
       Mat intrinsic, distortion, R1, R2;
-      fsr2["intrinsic"] >> intrinsic;
-      fsr2["distortion"] >> distortion;
-      fsr2.release();
+      fsr1["intrinsic"] >> intrinsic;
+      fsr1["distortion"] >> distortion;
+      fsr1.release();
 
 
       R1 = intrinsic.inv() * H1 * intrinsic;
@@ -342,6 +343,26 @@ int main(int argc, char** argv )
       // display the images
       imshow("Task 1 A", img_10);
       imshow("Task 1 B", image_b_mod);
+
+
+      ////////    ///     //////  //    //     ///////
+         //      // //   //    // //   //     //     //
+         //     //   //  //       //  //             //
+         //    //     //  //////  /////        ///////
+         //    /////////       // //  //      //
+         //    //     // //    // //   //     //
+         //    //     //  //////  //    //    /////////
+
+
+      // task 2
+      // use given sfm camera matrix and distortion coefficients
+      FileStorage fsr2("sfm_camera_parameters_final.xml", FileStorage::READ);
+      fsr2["intrinsic"] >> intrinsic;
+      fsr2["distortion"] >> distortion;
+      fsr2.release();
+
+
+      undistortPoints(features_keep_a, features_b, intrinsic, distortion);
 
 
 
