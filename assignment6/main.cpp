@@ -79,7 +79,7 @@ int main(int argc, char** argv )
   {
 
     // cycle through image set types
-    for (int i=0; i<5; i++)
+    for (int i=0; i<4; i++)
     {
       // cycle through the images of each set
       for (int j=10; j<= 15; j=j+gap)
@@ -279,7 +279,7 @@ int main(int argc, char** argv )
       Mat F = findFundamentalMat(features_keep_a, features_b, FM_8POINT, 3.0, 0.99);
 
       /*
-      // remove outlier features
+      // remove outlier features (only for FM_RANSAC method above)
       features_keep_a_temp.clear();
       features_keep_b_temp.clear();
       uint status; // for conversion of uchar to uint
@@ -330,6 +330,14 @@ int main(int argc, char** argv )
       remap(image_b_mod, image_b_mod, mapx2, mapy2, INTER_LINEAR, BORDER_CONSTANT, 0);
 
 
+      // draw horizontal lines on images
+      for (int kk = 1; kk<=4; kk++)
+      {
+        line(img_10,      Point2f(0,96*kk), Point2f(640,96*kk), Scalar(255,0,0));
+        line(image_b_mod, Point2f(0,96*kk), Point2f(640,96*kk), Scalar(255,0,0));
+      }
+
+
 
       // display the images
       imshow("Task 1 A", img_10);
@@ -348,12 +356,7 @@ int main(int argc, char** argv )
 
 
     } // end for loop
-  }
-
-
-
-
-
+  } // end if true statement
 
 
 
