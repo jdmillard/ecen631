@@ -364,12 +364,18 @@ int main(int argc, char** argv )
       undistortPoints(features_b     , features_b     , intrinsic, distortion, noArray(), intrinsic);
 
       // find fundamental matrix using the undistorted points
-      F = findFundamentalMat(features_keep_a, features_b, FM_LMEDS, 3.0, 0.99);
+      F = findFundamentalMat(features_keep_a, features_b, FM_8POINT, 3.0, 0.99);
 
       // get the essential matrix
       Mat E = intrinsic.t()*F*intrinsic;
 
-      
+      // normalize (look at slides)
+
+      // get rotation and translation using recoverPose
+
+      //
+
+
 
 
 
