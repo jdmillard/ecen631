@@ -35,35 +35,25 @@ void drawRedLinesSimple(Mat img, std::vector<Point2f>& points_a,
 int main(int argc, char** argv )
 {
 
-
-////////    ///     //////  //    //       //
-   //      // //   //    // //   //      ////
-   //     //   //  //       //  //         //
-   //    //     //  //////  /////          //
-   //    /////////       // //  //         //
-   //    //     // //    // //   //        //
-   //    //     //  //////  //    //     //////
-
-
    // initialize variables and windows
    String path;
 
    std::vector<String> set; // for generating path of each
-   set.push_back("Optical Flow");
+   //set.push_back("Optical Flow");
    set.push_back("Parallel Cube");
    set.push_back("Parallel Real");
    set.push_back("Turned Cube");
    set.push_back("Turned Real");
 
    std::vector<String> prefix; // for file names for path
-   prefix.push_back("O");
+   //prefix.push_back("O");
    prefix.push_back("ParallelCube");
    prefix.push_back("ParallelReal");
    prefix.push_back("TurnCube");
    prefix.push_back("TurnReal");
 
    std::vector<int> nn; // for ending inner loop
-   nn.push_back(17);
+   //nn.push_back(17);
    nn.push_back(18);
    nn.push_back(18);
    nn.push_back(18);
@@ -83,9 +73,9 @@ int main(int argc, char** argv )
 
   std::vector<Point2f> features_keep_a, features_keep_a_temp, features_keep_b_temp;
   Mat img_10;
-  bool task3 = true;
+  bool task1 = true;
   int gap = 1;
-  if (task3)
+  if (task1)
   {
 
     // cycle through image set types
@@ -268,6 +258,15 @@ int main(int argc, char** argv )
       } // end for loop
 
 
+////////    ///     //////  //    //       //
+   //      // //   //    // //   //      ////
+   //     //   //  //       //  //         //
+   //    //     //  //////  /////          //
+   //    /////////       // //  //         //
+   //    //     // //    // //   //        //
+   //    //     //  //////  //    //     //////
+
+
       // FINISHED CURRENT IMAGE TYPE
       // features_keep_a  are the original GFTT from the first image
       // features_b       are the surviving corresponding feature in last image
@@ -277,9 +276,9 @@ int main(int argc, char** argv )
 
       // find the fundamental matrix between first and last with outliers
       std::vector<uchar> status_vec;
-      Mat F = findFundamentalMat(features_keep_a, features_b, FM_RANSAC, 3.0, 0.99, status_vec);
+      Mat F = findFundamentalMat(features_keep_a, features_b, FM_8POINT, 3.0, 0.99);
 
-
+      /*
       // remove outlier features
       features_keep_a_temp.clear();
       features_keep_b_temp.clear();
@@ -294,6 +293,7 @@ int main(int argc, char** argv )
           features_keep_b_temp.push_back(features_b[kk]);
         }
       }
+      */
 
       features_keep_a.clear();
       features_keep_a = features_keep_a_temp;
