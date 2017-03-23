@@ -362,7 +362,7 @@ int main(int argc, char** argv )
    //    //     //  //////  //    //     ///////
 
 
-  // task 2
+  // task 3
   namedWindow("Task 3 A", CV_WINDOW_AUTOSIZE);
   namedWindow("Task 3 B", CV_WINDOW_AUTOSIZE);
   moveWindow("Task 3 A", 50, 50);
