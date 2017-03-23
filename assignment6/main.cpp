@@ -276,9 +276,8 @@ int main(int argc, char** argv )
 
       // find the fundamental matrix between first and last with outliers
       std::vector<uchar> status_vec;
-      Mat F = findFundamentalMat(features_keep_a, features_b, FM_8POINT, 3.0, 0.99);
+      Mat F = findFundamentalMat(features_keep_a, features_b, FM_RANSAC, 3.0, 0.99, status_vec);
 
-      /*
       // remove outlier features (only for FM_RANSAC method above)
       features_keep_a_temp.clear();
       features_keep_b_temp.clear();
@@ -294,14 +293,13 @@ int main(int argc, char** argv )
         }
       }
 
-
       features_keep_a.clear();
       features_keep_a = features_keep_a_temp;
 
       features_b.clear();
       features_b = features_keep_b_temp;
-      */
 
+      F = findFundamentalMat(features_keep_a, features_b, FM_8POINT, 3.0, 0.99);
 
       // find the homography matricies
       Mat H1, H2;
@@ -361,8 +359,21 @@ int main(int argc, char** argv )
       fsr2["distortion"] >> distortion;
       fsr2.release();
 
+      // undistort the points now that we have calibration data
+      undistortPoints(features_keep_a, features_keep_a, intrinsic, distortion, noArray(), intrinsic);
+      undistortPoints(features_b     , features_b     , intrinsic, distortion, noArray(), intrinsic);
 
-      undistortPoints(features_keep_a, features_b, intrinsic, distortion);
+      // find fundamental matrix using the undistorted points
+      F = findFundamentalMat(features_keep_a, features_b, FM_LMEDS, 3.0, 0.99);
+
+      // get the essential matrix
+      Mat E = intrinsic.t()*F*intrinsic;
+
+      
+
+
+
+
 
 
 
