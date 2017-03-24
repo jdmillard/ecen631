@@ -320,6 +320,9 @@ int main(int argc, char** argv )
       R1 = intrinsic.inv() * H1 * intrinsic;
       R2 = intrinsic.inv() * H2 * intrinsic;
 
+      Mat img_a = img_10.clone();
+      Mat img_b = image_b_mod.clone();
+
       Mat mapx1, mapx2, mapy1, mapy2;
       initUndistortRectifyMap( intrinsic, distortion, R1, intrinsic,
                                 img_10.size(), CV_16SC2, mapx1, mapy1 );
@@ -398,12 +401,85 @@ int main(int argc, char** argv )
       std::cout << F << std::endl;
 
 
-      //
+////////    ///     //////  //    //     ///////
+   //      // //   //    // //   //     //     //
+   //     //   //  //       //  //             //
+   //    //     //  //////  /////        ///////
+   //    /////////       // //  //             //
+   //    //     // //    // //   //     //     //
+   //    //     //  //////  //    //     ///////
+
+
+      // task 3
+      namedWindow("Task 3 A", CV_WINDOW_AUTOSIZE);
+      namedWindow("Task 3 B", CV_WINDOW_AUTOSIZE);
+      moveWindow("Task 3 A", 50, 500);
+      moveWindow("Task 3 B", 700, 500);
+
+      // perform stereo rectification virtually make both image planes the same
+      // frame. Q is the 4x4 disparity-to-depth mapping matrix
+      Mat P1, P2, Q;
+      stereoRectify(  intrinsic, distortion,
+                      intrinsic, distortion,
+                      img_a.size(),  R,  t,
+                      R1, R2, P1, P2, Q  );
+
+
+
+      /*
+      // undistort the 4 corner points of left and right
+      undistortPoints(centers4_left,   features_keep_a,
+                      intrinsic_left,  distortion_left,
+                      R1,              P1);
+      undistortPoints(centers4_right,  features_b,
+                      intrinsic_right, distortion_right,
+                      R2,              P2);
+      */
+
+
+
+      // our points are already undistorted
+      // populate vector of Point3f by cycling through each point
+      std::vector<Point3f> points3d_a, points3d_b;
+      for (int kk=0; kk < features_keep_a.size() ; kk++)
+      {
+        points3d_a.push_back(Point3f(features_keep_a[kk].x,  features_keep_a[kk].y, features_keep_a[kk].x-features_b[kk].x));
+        points3d_b.push_back(Point3f(features_b[kk].x,       features_b[kk].y,      features_keep_a[kk].x-features_b[kk].x));
+      }
+
+      /*
+      // transform the points to calculate 3D information of 4 points
+      perspectiveTransform(points3d_a,  points3d_a, Q);
+      perspectiveTransform(points3d_b, points3d_b, Q);
+      std::cout << points3d_a << std::endl;
+      std::cout << points3d_b << std::endl;
+      */
 
 
 
 
 
+
+
+
+
+
+
+      // undistort first and last images
+      initUndistortRectifyMap(  intrinsic, distortion,
+                                R1, P1, img_a.size(),
+                                CV_16SC2, mapx1, mapy1  );
+      initUndistortRectifyMap(  intrinsic, distortion,
+                                R2, P2, img_b.size(),
+                                CV_16SC2, mapx2, mapy2  );
+
+      // remap images using calculating mapx, mapy
+      //remap(image_left, image_left_mod, mapx1, mapy1, INTER_LINEAR, BORDER_CONSTANT, 0);
+      //remap(image_right, image_right_mod, mapx2, mapy2, INTER_LINEAR, BORDER_CONSTANT, 0);
+
+      // display the images
+      imshow("Task 3 A", img_a);
+      imshow("Task 3 B", img_b);
 
 
 
