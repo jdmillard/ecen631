@@ -81,6 +81,8 @@ int main(int argc, char** argv )
     // cycle through image set types
     for (int i=0; i<4; i++)
     {
+      std::cout << "---" << std::endl;
+      std::cout << set[i] << std::endl;
       // cycle through the images of each set
       for (int j=10; j<= 15; j=j+gap)
       {
@@ -386,9 +388,15 @@ int main(int argc, char** argv )
       // to get them out to the image plane, we do it in the form of fx and principal point (cx, cy)
       recoverPose(E, features_keep_a, features_b, R, t, fx, Point2f(cx, cy));
 
-      std::cout << "---" << std::endl;
+      std::cout << "R=" << std::endl;
       std::cout << R << std::endl;
+      std::cout << "t=" << std::endl;
       std::cout << t << std::endl;
+      std::cout << "E=" << std::endl;
+      std::cout << E << std::endl;
+      std::cout << "F=" << std::endl;
+      std::cout << F << std::endl;
+
 
       //
 
