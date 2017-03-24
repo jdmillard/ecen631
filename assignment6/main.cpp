@@ -369,9 +369,16 @@ int main(int argc, char** argv )
       // get the essential matrix
       Mat E = intrinsic.t()*F*intrinsic;
 
-      // normalize (look at slides)
+      // normalize (svd?)
+      Mat w, u, vt, w2;
+      SVD::compute(E, w, u, vt);
+      w2 = Mat::eye(3,3, CV_64F);     // 3x3 identity
+      w2.at<double>(2,2) = 0;         // new normalized singular values
+      E = u * w2 * vt;
 
       // get rotation and translation using recoverPose
+      //Mat R, t;
+      //recoverPose(E, features_keep_a, features_b, R, t);
 
       //
 
