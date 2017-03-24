@@ -365,16 +365,17 @@ int main(int argc, char** argv )
       fsr2.release();
 
       // undistort the points now that we have calibration data
-      undistortPoints(features_keep_a, features_keep_a, intrinsic, distortion, noArray(), intrinsic);
-      undistortPoints(features_b     , features_b     , intrinsic, distortion, noArray(), intrinsic);
+      std::vector<Point2f> features_ua, features_ub;
+      undistortPoints(features_keep_a, features_ua, intrinsic, distortion, noArray(), intrinsic);
+      undistortPoints(features_b     , features_ub, intrinsic, distortion, noArray(), intrinsic);
 
       // find fundamental matrix using the undistorted points
-      F = findFundamentalMat(features_keep_a, features_b, FM_8POINT, 3.0, 0.99);
+      F = findFundamentalMat(features_ua, features_ub, FM_8POINT, 3.0, 0.99);
 
       // get the essential matrix
       Mat E = intrinsic.t()*F*intrinsic;
 
-      // normalize (svd?)
+      // normalize using svd
       Mat w, u, vt, w2;
       SVD::compute(E, w, u, vt);
       w2 = Mat::eye(3,3, CV_64F);     // 3x3 identity
@@ -389,7 +390,7 @@ int main(int argc, char** argv )
       Mat R, t;
       // our feature locations are in the sensor frame, so we give it K (intrisic)
       // to get them out to the image plane, we do it in the form of fx and principal point (cx, cy)
-      recoverPose(E, features_keep_a, features_b, R, t, fx, Point2f(cx, cy));
+      recoverPose(E, features_ua, features_ub, R, t, fx, Point2f(cx, cy));
 
       std::cout << "R=" << std::endl;
       std::cout << R << std::endl;
@@ -416,6 +417,19 @@ int main(int argc, char** argv )
       moveWindow("Task 3 A", 50, 500);
       moveWindow("Task 3 B", 700, 500);
 
+      // scale factor
+      double scale_factor = 1;
+      if (set[i] == "Parallel Cube" || set[i] == "Parallel Real" )
+      {
+        scale_factor = 3.43;
+      }
+      if (set[i] == "Turned Cube" || set[i] == "Turned Real" )
+      {
+        scale_factor = 3.12;
+      }
+
+      t = t*scale_factor;
+
       // perform stereo rectification virtually make both image planes the same
       // frame. Q is the 4x4 disparity-to-depth mapping matrix
       Mat P1, P2, Q;
@@ -425,57 +439,75 @@ int main(int argc, char** argv )
                       R1, R2, P1, P2, Q  );
 
 
-
-      /*
-      // undistort the 4 corner points of left and right
-      undistortPoints(centers4_left,   features_keep_a,
-                      intrinsic_left,  distortion_left,
-                      R1,              P1);
-      undistortPoints(centers4_right,  features_b,
-                      intrinsic_right, distortion_right,
-                      R2,              P2);
-      */
-
-
-
       // our points are already undistorted
       // populate vector of Point3f by cycling through each point
       std::vector<Point3f> points3d_a, points3d_b;
-      for (int kk=0; kk < features_keep_a.size() ; kk++)
+      for (int kk=0; kk < features_ua.size() ; kk++)
       {
-        points3d_a.push_back(Point3f(features_keep_a[kk].x,  features_keep_a[kk].y, features_keep_a[kk].x-features_b[kk].x));
-        points3d_b.push_back(Point3f(features_b[kk].x,       features_b[kk].y,      features_keep_a[kk].x-features_b[kk].x));
+        points3d_a.push_back(Point3f(features_ua[kk].x, features_ua[kk].y, features_ua[kk].x-features_ub[kk].x));
+        points3d_b.push_back(Point3f(features_ub[kk].x, features_ub[kk].y, features_ua[kk].x-features_ub[kk].x));
       }
 
-      /*
+
       // transform the points to calculate 3D information of 4 points
-      perspectiveTransform(points3d_a,  points3d_a, Q);
+      perspectiveTransform(points3d_a, points3d_a, Q);
       perspectiveTransform(points3d_b, points3d_b, Q);
-      std::cout << points3d_a << std::endl;
-      std::cout << points3d_b << std::endl;
-      */
+
+      // the points3d_a and points3d_b are the 3d estimates of the points
+      // from the perspective of each camera, correlated with
+      // features_keep_a and features_b
+
+
+      int cube_idx;
+      if (set[i] == "Parallel Cube")
+      {
+
+        // look for the close center of cube 296, 241
+        for (int kk=0; kk < features_keep_a.size() ; kk++)
+        {
+          if (features_keep_a[kk].x > 290 && features_keep_a[kk].x < 306)
+          {
+            if (features_keep_a[kk].y > 230 && features_keep_a[kk].y < 250)
+            {
+              // feature found
+              cube_idx = kk;
+            }
+          }
+        }
+
+        std::cout << "distance" << std::endl;
+        std::cout << points3d_a[cube_idx] << std::endl;
+
+      }
+
+
+      if (set[i] == "Turned Cube")
+      {
+
+        // look for the close center of cube 235, 271
+        for (int kk=0; kk < features_keep_a.size() ; kk++)
+        {
+          if (features_keep_a[kk].x > 225 && features_keep_a[kk].x < 245)
+          {
+            if (features_keep_a[kk].y > 261 && features_keep_a[kk].y < 281)
+            {
+              // feature found
+              cube_idx = kk;
+            }
+          }
+        }
+
+        std::cout << "distance" << std::endl;
+        std::cout << points3d_a[cube_idx] << std::endl;
+
+      }
 
 
 
-
-
-
-
-
-
-
-
-      // undistort first and last images
-      initUndistortRectifyMap(  intrinsic, distortion,
-                                R1, P1, img_a.size(),
-                                CV_16SC2, mapx1, mapy1  );
-      initUndistortRectifyMap(  intrinsic, distortion,
-                                R2, P2, img_b.size(),
-                                CV_16SC2, mapx2, mapy2  );
-
-      // remap images using calculating mapx, mapy
-      //remap(image_left, image_left_mod, mapx1, mapy1, INTER_LINEAR, BORDER_CONSTANT, 0);
-      //remap(image_right, image_right_mod, mapx2, mapy2, INTER_LINEAR, BORDER_CONSTANT, 0);
+      // draw feature points
+      drawPoints(img_a, features_keep_a);
+      drawPoints(img_b, features_b);
+      //circle(img_a, features_keep_a[cube_idx], 2, Scalar(255, 0, 0), 2);
 
       // display the images
       imshow("Task 3 A", img_a);
