@@ -427,8 +427,11 @@ int main(int argc, char** argv )
       {
         scale_factor = 3.12;
       }
-
+      std::cout << "scale factor" << std::endl;
+      std::cout << scale_factor << std::endl;
       t = t*scale_factor;
+      std::cout << "new t" << std::endl;
+      std::cout << t << std::endl;
 
       // perform stereo rectification virtually make both image planes the same
       // frame. Q is the 4x4 disparity-to-depth mapping matrix
@@ -502,11 +505,15 @@ int main(int argc, char** argv )
 
       }
 
+      // select 4 feature points
+      std::vector<Point2f> four_a(features_keep_a.begin(), features_keep_a.begin() + 4);
+      std::vector<Point2f> four_b(features_b.begin() ,     features_b.begin() + 4);
+
 
 
       // draw feature points
-      drawPoints(img_a, features_keep_a);
-      drawPoints(img_b, features_b);
+      drawPoints(img_a, four_a);
+      drawPoints(img_b, four_b);
       //circle(img_a, features_keep_a[cube_idx], 2, Scalar(255, 0, 0), 2);
 
       // display the images
