@@ -377,8 +377,18 @@ int main(int argc, char** argv )
       E = u * w2 * vt;
 
       // get rotation and translation using recoverPose
-      //Mat R, t;
-      //recoverPose(E, features_keep_a, features_b, R, t);
+      double fx = intrinsic.at<double>(0,0);
+      double fy = intrinsic.at<double>(1,1);
+      double cx = intrinsic.at<double>(0,2);
+      double cy = intrinsic.at<double>(1,2);
+      Mat R, t;
+      // our feature locations are in the sensor frame, so we give it K (intrisic)
+      // to get them out to the image plane, we do it in the form of fx and principal point (cx, cy)
+      recoverPose(E, features_keep_a, features_b, R, t, fx, Point2f(cx, cy));
+
+      std::cout << "---" << std::endl;
+      std::cout << R << std::endl;
+      std::cout << t << std::endl;
 
       //
 
