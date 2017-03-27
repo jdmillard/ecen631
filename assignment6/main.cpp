@@ -31,6 +31,36 @@ void drawRedLinesSimple(Mat img, std::vector<Point2f>& points_a,
   }
 }
 
+void writeDistance(Mat img_a, std::vector<Point3f>& four_3d, std::vector<Point2f>& four_2d){
+
+  // get text format of this iteration's x, y, z for right image
+  Point2f place;
+  String x_str, y_str, z_str;
+
+  for (int kk=0; kk < four_3d.size() ; kk++)
+    {
+      std::cout << "--- point " + std::to_string(kk) + " ---" << std::endl;
+      x_str = "x="+std::to_string(four_3d[kk].x).substr(0,5);
+      y_str = "y="+std::to_string(four_3d[kk].y).substr(0,5);
+      z_str = "z="+std::to_string(four_3d[kk].z).substr(0,5);
+      place.x = four_2d[kk].x + 15;
+      place.y = four_2d[kk].y;
+      putText(img_a, x_str, place, FONT_HERSHEY_SIMPLEX, 0.4, Scalar(0,0,255), 1);
+      std::cout << x_str << std::endl;
+      place.y = place.y + 11;
+      putText(img_a, y_str, place, FONT_HERSHEY_SIMPLEX, 0.4,  Scalar(0,0,255), 1);
+      std::cout << y_str << std::endl;
+      place.y = place.y + 11;
+      putText(img_a, z_str, place, FONT_HERSHEY_SIMPLEX, 0.4,  Scalar(0,0,255), 1);
+      std::cout << z_str << std::endl;
+    }
+}
+
+
+
+
+
+
 
 int main(int argc, char** argv )
 {
@@ -509,12 +539,24 @@ int main(int argc, char** argv )
       std::vector<Point2f> four_a(features_keep_a.begin(), features_keep_a.begin() + 4);
       std::vector<Point2f> four_b(features_b.begin() ,     features_b.begin() + 4);
 
-
-
       // draw feature points
       drawPoints(img_a, four_a);
       drawPoints(img_b, four_b);
       //circle(img_a, features_keep_a[cube_idx], 2, Scalar(255, 0, 0), 2);
+
+
+      // select 4 feature 3d points
+      std::vector<Point3f> four_3da(points3d_a.begin(), points3d_a.begin() + 4);
+      std::vector<Point3f> four_3db(points3d_b.begin(), points3d_b.begin() + 4);
+
+      // putText for the 3d locations
+      std::cout << "before points" << std::endl;
+      writeDistance(img_a, four_3da, four_a);
+      std::cout << "after points" << std::endl;
+      writeDistance(img_b, four_3db, four_b);
+
+
+
 
       // display the images
       imshow("Task 3 A", img_a);
