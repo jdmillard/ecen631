@@ -1,0 +1,3 @@
+[submodule "live-sfm"]
+	path = live-sfm
+	url = git@github.com:jdmillard/live-sfm.git
