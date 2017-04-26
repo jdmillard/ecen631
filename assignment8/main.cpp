@@ -128,7 +128,7 @@ int main(int argc, char** argv )
     frame = imread( path2, CV_LOAD_IMAGE_GRAYSCALE);
 
     // test image validity
-    if (!frame.data || frame_idx > 10) // REMOVE SECOND HALF OF THIS, IT'S FOR TESTING <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    if (!frame.data || frame_idx > 50) // REMOVE SECOND HALF OF THIS, IT'S FOR TESTING <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     {
       printf("end of image sequence \n");
 
@@ -189,6 +189,7 @@ int main(int argc, char** argv )
 
 
       features_mask.clear();
+      features_new.clear();
       bool edge = false;
       // template matching
       int d_wind = 81; // window dimension
@@ -316,24 +317,37 @@ int main(int argc, char** argv )
 
     // use current frame to refresh features
 
-    // find goodFeaturesToTrack and overwrite features_old
-    int max_points = 1000;
-    double quality = 0.01;
-    double min_dist = 10;
-    Mat mask;
-    int blockSize = 3;
-    bool useHarris = false;
-    double k = 0.04;
-    goodFeaturesToTrack(frame, features_old, max_points, quality, min_dist, mask, blockSize, useHarris, k);
+
+    // REMOVE THIS IF STATEMENT AND GENERATE NEW FEATURES EVERY TIME
+    if (frame_idx==0)
+    {
+      // find goodFeaturesToTrack and overwrite features_old
+      int max_points = 1000;
+      double quality = 0.01;
+      double min_dist = 10;
+      Mat mask;
+      int blockSize = 3;
+      bool useHarris = false;
+      double k = 0.04;
+      goodFeaturesToTrack(frame, features_old, max_points, quality, min_dist, mask, blockSize, useHarris, k);
+    }
+    else
+    {
+      features_old.clear();
+      features_old = features_new;
+    }
+
 
     // remember this frame as the old one next iteration
     frame_old = frame.clone();
 
     // display the refreshed features
-    drawFeatures(frame, features_old);
+    Mat frame_draw = frame.clone();
+    drawFeatures(frame_draw, features_old);
+
 
     // display image
-    imshow("Task 1 A", frame);
+    imshow("Task 1 A", frame_draw);
 
 
     // wait for key input from user
