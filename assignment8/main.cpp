@@ -2,6 +2,8 @@
 #include <string> // needed for setting std::strings and using to_string
 #include <fstream>
 
+#include <Python.h>
+
 using namespace cv;
 
 
@@ -10,6 +12,9 @@ using namespace cv;
 
 int main(int argc, char** argv )
 {
+
+
+
 
   // determines when to stop the algorithm
   bool feed = true;
@@ -20,6 +25,7 @@ int main(int argc, char** argv )
   //set = "hall";
   //set = "urban";
 
+  // decide what to do about camera parameters based on selected image sequence
 
   // set first frame index
   int frame_idx = 0;
@@ -62,12 +68,35 @@ int main(int argc, char** argv )
     frame = imread( path2, CV_LOAD_IMAGE_GRAYSCALE);
 
     // test image validity
-    if (!frame.data)
+    if (!frame.data || frame_idx > 10) // REMOVE SECOND HALF OF THIS, IT'S FOR TESTING
     {
       printf("end of image sequence \n");
-      // run the write of txt file with r and t
+      // write the txt file with r and t
+      // confirm that it is written, and closed
+
+      // display truth (if exists)
+
       // call c++ plotting wrapper
-      // perhaps display truth
+      // need to read in these lines from a file
+
+      //Py_SetProgramName(argv[0]);  /* optional but recommended */
+      Py_Initialize();
+      PySys_SetArgv(argc, argv); // must call this to get sys.argv and relative imports
+      PyRun_SimpleString("import matplotlib.pyplot as plt \n"
+                         "import numpy as np \n"
+                         "t = np.arange(0.0, 2.0, 0.01) \n"
+                         "s = 1 + np.sin(2*np.pi*t) \n"
+                         "plt.plot(t, s) \n"
+                         "plt.xlabel('time (s)') \n"
+                         "plt.ylabel('voltage (mV)') \n"
+                         "plt.title('About as simple as it gets, folks') \n"
+                         "plt.grid(True) \n"
+                         "plt.show() \n"
+                         "print('did it work?')\n");
+      Py_Finalize();
+
+
+
       break;
     }
 
