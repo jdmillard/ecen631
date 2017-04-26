@@ -113,6 +113,10 @@ int main(int argc, char** argv )
 
 
 
+    // track features from previous frame to here
+    // get rotation, translation for the current index
+    // store transformation, get cumulative transformation and store in rt.txt
+    // get new features with gftt for the next frame
 
 
 
