@@ -43,7 +43,31 @@ void cleanFeatures(std::vector<Point2f>& features_old, std::vector<Point2f>& fea
   //features_mask.clear();
 }
 
+void cleanFeatures2(std::vector<Point2f>& features_old, std::vector<Point2f>& features_new, std::vector<uchar> features_mask, std::vector<float> err, double minEigThreshold)
+{
+  // the purpose of this method is to clean up the original and recent
+  // feature vectors based on the class member "features_mask"
+  std::vector<cv::Point2f> features_a, features_b, features_c;
 
+  for (int i=0; i<features_mask.size(); i++)
+  {
+    if (features_mask[i] == 1 && err[i] > minEigThreshold)
+    {
+      // keep the current feature
+      //features_a.push_back(features_all[0][i]);
+      features_b.push_back(features_new[i]);
+      features_c.push_back(features_old[i]);
+    }
+  }
+
+  // update feature vectors
+  //features_all[0]   = features_a;
+  features_new = features_b;
+  features_old = features_c;
+
+  // clean the mask
+  //features_mask.clear();
+}
 
 
 
@@ -55,6 +79,9 @@ int main(int argc, char** argv )
 
   // determines when to stop the algorithm
   bool feed = true;
+  bool live_plotting = true;
+  bool intensity = false;
+  bool lkflow = true;
 
   // whether or not to use practice images
   std::string set;
@@ -100,13 +127,17 @@ int main(int argc, char** argv )
   std::ofstream save;
   save.open("rt.txt"); // eventually switch to rt.txt
 
-
-  // initialize frame and display window
   Mat frame;
   Mat frame_old;
   Mat Ck;
-  namedWindow("Task 1 A", CV_WINDOW_AUTOSIZE);
-  moveWindow("Task 1 A", 50, 50);
+
+  if (live_plotting)
+  {
+    // initialize frame and display window
+    namedWindow("Task 1 A", CV_WINDOW_AUTOSIZE);
+    moveWindow("Task 1 A", 50, 50);
+  }
+
 
   // critical arrays
   std::vector<uchar> 										features_mask;
@@ -149,7 +180,7 @@ int main(int argc, char** argv )
     frame = imread( path2, CV_LOAD_IMAGE_GRAYSCALE);
 
     // test image validity
-    if (!frame.data || frame_idx > 50) // REMOVE SECOND HALF OF THIS, IT'S FOR TESTING <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    if (!frame.data || frame_idx>20)
     {
       printf("end of image sequence \n");
 
@@ -216,78 +247,105 @@ int main(int argc, char** argv )
       int d_wind = 81; // window dimension
       int d_temp = 31; // template dimension
 
-      for (int i=0; i<features_old.size(); i++)
+      if (intensity)
       {
-
-        // create a window from current image for the current feature
-        int x1 = features_old[i].x - (d_wind-1)/2;
-        x1 = std::max(x1, 0);
-        x1 = std::min(x1, frame.cols-d_wind);
-        int y1 = features_old[i].y - (d_wind-1)/2;
-        y1 = std::max(y1, 0);
-        y1 = std::min(y1, frame.rows-d_wind);
-        Mat win = frame(Rect(x1, y1, d_wind, d_wind));
-
-        // create a template from previous image for the current feature
-        int x2 = features_old[i].x - (d_temp-1)/2;
-        int y2 = features_old[i].y - (d_temp-1)/2;
-        if (x2 < 0 || x2 > frame.cols-d_temp || y2 < 0 || y2 > frame.rows-d_temp)
+        for (int i=0; i<features_old.size(); i++)
         {
-          // template doesn't fit in frame, it's too close to the edge
-          // mark it as a bad feature and enter a false location
-          features_mask.push_back(0);
-          // feature will be removed from both old and new, so use placeholder
-          features_new.push_back(features_old[i]);
-          edge = true;
-        }
-        else
+
+          // create a window from current image for the current feature
+          int x1 = features_old[i].x - (d_wind-1)/2;
+          x1 = std::max(x1, 0);
+          x1 = std::min(x1, frame.cols-d_wind);
+          int y1 = features_old[i].y - (d_wind-1)/2;
+          y1 = std::max(y1, 0);
+          y1 = std::min(y1, frame.rows-d_wind);
+          Mat win = frame(Rect(x1, y1, d_wind, d_wind));
+
+          // create a template from previous image for the current feature
+          int x2 = features_old[i].x - (d_temp-1)/2;
+          int y2 = features_old[i].y - (d_temp-1)/2;
+          if (x2 < 0 || x2 > frame.cols-d_temp || y2 < 0 || y2 > frame.rows-d_temp)
+          {
+            // template doesn't fit in frame, it's too close to the edge
+            // mark it as a bad feature and enter a false location
+            features_mask.push_back(0);
+            // feature will be removed from both old and new, so use placeholder
+            features_new.push_back(features_old[i]);
+            edge = true;
+          }
+          else
+          {
+            // feature location is good, not too close to the edge
+            // mark it as a good feature and perform template matching
+            features_mask.push_back(1);
+
+            // generate good template
+            Mat tem = frame_old(Rect(x2, y2, d_temp, d_temp));
+
+            // match the current template and window
+            Mat output;
+            matchTemplate(win, tem, output, TM_CCORR_NORMED);
+
+            // normalize the intensity output
+            normalize(output, output, 0, 1, NORM_MINMAX,  -1, Mat());
+
+            // locate the position of highest correlation
+            Point max_point;
+            minMaxLoc(output, 0, 0, 0, &max_point, Mat());
+
+            // represent the max point in original image coordinates
+            max_point.x = max_point.x + d_temp/2 + x1;
+            max_point.y = max_point.y + d_temp/2 + y1;
+
+            features_new.push_back(max_point);
+          }
+        } // end of looping through features
+
+        // remove the features with poor positioning if any were found
+        if (edge)
         {
-          // feature location is good, not too close to the edge
-          // mark it as a good feature and perform template matching
-          features_mask.push_back(1);
-
-          // generate good template
-          Mat tem = frame_old(Rect(x2, y2, d_temp, d_temp));
-
-          // match the current template and window
-          Mat output;
-          matchTemplate(win, tem, output, TM_CCORR_NORMED);
-
-          // normalize the intensity output
-          normalize(output, output, 0, 1, NORM_MINMAX,  -1, Mat());
-
-          // locate the position of highest correlation
-          Point max_point;
-          minMaxLoc(output, 0, 0, 0, &max_point, Mat());
-
-          // represent the max point in original image coordinates
-          max_point.x = max_point.x + d_temp/2 + x1;
-          max_point.y = max_point.y + d_temp/2 + y1;
-
-          features_new.push_back(max_point);
+          cleanFeatures(features_old, features_new, features_mask);
         }
-      } // end of looping through features
-
-      // remove the features with poor positioning if any were found
-      if (edge)
-      {
-        cleanFeatures(features_old, features_new, features_mask);
       }
+      else if (lkflow)
+      {
+        // generate features_new using lk optical flow
+
+        // perform optical flow
+
+        features_mask.clear();
+        std::vector<float> err;
+        TermCriteria criteria = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 0.01);
+
+        int flags = 0;
+        double minEigThreshold = 0.001;
+        calcOpticalFlowPyrLK	(	frame_old,     frame,
+                                features_old,  features_new,
+                                features_mask, err,
+                                Size(31,31),   5,     criteria, // the 5 is the max levels, increasing improves performance
+                                OPTFLOW_LK_GET_MIN_EIGENVALS, minEigThreshold);
+
+        // clean up
+        cleanFeatures2(features_old, features_new, features_mask, err, minEigThreshold);
+
+
+      }
+
 
       // now we have features_new and features_old, cleaned up
 
       // undistort ??? (would require logic to find parameters)
 
       // use findFundamentalMat to locate the outlier feature points
-      int ep_dist = 0.03 * frame.rows; // acceptable distance from epipolar line
-      double confidence = 0.95; // confidence of correct F matrix (0-1)
+      int ep_dist = 0.1; // acceptable distance from epipolar line
+      double confidence = 0.999; // confidence of correct F matrix (0-1)
       features_mask.clear();
       Mat F_outlier = findFundamentalMat(features_old, features_new, FM_RANSAC, ep_dist, confidence, features_mask);
       cleanFeatures(features_old, features_new, features_mask);
 
       // undistort ?? (need to figure out logic for this and where to undistort)
 
-      // get F using the good feature matches
+      // get F using the good feature matches << THIS IS EXTRA, COME BACK TO THIS. print both and compare TODO
       Mat F = findFundamentalMat(features_old, features_new, FM_8POINT);
 
       // use intrinsic parameters to get essential matrix
@@ -345,27 +403,11 @@ int main(int argc, char** argv )
         Ck = Ck*Tk;
       }
 
-      std::cout << "---" << std::endl;
-      std::cout << Ck << std::endl;
+      //std::cout << "---" << std::endl;
+      //std::cout << Ck << std::endl;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      // output the current Tk matrix to the rt.txt if not the first frame
+      // output the current Ck matrix to the rt.txt if not the first frame
 
       // create DUMMY Tk DUMMY Tk DUMMY Tk DUMMY Tk DUMMY Tk
       //Mat Tk(Size(4,4), CV_64FC1);
@@ -402,7 +444,7 @@ int main(int argc, char** argv )
     }
 
     // use current frame to refresh features
-    /*
+
     // used for no refresh (for testing feature tracking)
     if (frame_idx==0)
     {
@@ -421,7 +463,7 @@ int main(int argc, char** argv )
       features_old.clear();
       features_old = features_new;
     }
-    */
+    /*
     features_old.clear();
     int max_points = 1000;
     double quality = 0.01;
@@ -431,26 +473,30 @@ int main(int argc, char** argv )
     bool useHarris = false;
     double k = 0.04;
     goodFeaturesToTrack(frame, features_old, max_points, quality, min_dist, mask, blockSize, useHarris, k);
+    */
 
 
     // remember this frame as the old one next iteration
     frame_old = frame.clone();
 
-    // display the refreshed features
-    Mat frame_draw = frame.clone();
-    drawFeatures(frame_draw, features_old);
+    if (live_plotting)
+    {
+      // display the refreshed features
+      Mat frame_draw = frame.clone();
+      drawFeatures(frame_draw, features_old);
 
-    // display the image with drawn features
-    imshow("Task 1 A", frame_draw);
+      // display the image with drawn features
+      imshow("Task 1 A", frame_draw);
 
-    // wait for key input from user
-    int key = waitKey();
-    if (key == 110) {
-      // the 'n' (next) key was pressed
-    } else if (key == 27) {
-      // the 'esc' key was pressed, end application
-      std::cout << "terminated by user" << std::endl;
-      return -1;
+      // wait for key input from user
+      int key = waitKey();
+      if (key == 110) {
+        // the 'n' (next) key was pressed
+      } else if (key == 27) {
+        // the 'esc' key was pressed, end application
+        std::cout << "terminated by user" << std::endl;
+        return -1;
+      }
     }
 
 
