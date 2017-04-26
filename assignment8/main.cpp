@@ -79,19 +79,19 @@ int main(int argc, char** argv )
     path = "practice/VO Practice Camera Parameters.txt";
   }
 
-  Mat intrisic (Size(3,3), CV_64FC1);
+  Mat intrinsic (Size(3,3), CV_64FC1);
   std::ifstream file_read;
   file_read.open(path);
   double testing;
-  file_read >> intrisic.at<double>(0,0);
-  file_read >> intrisic.at<double>(0,1);
-  file_read >> intrisic.at<double>(0,2);
-  file_read >> intrisic.at<double>(1,0);
-  file_read >> intrisic.at<double>(1,1);
-  file_read >> intrisic.at<double>(1,2);
-  file_read >> intrisic.at<double>(2,0);
-  file_read >> intrisic.at<double>(2,1);
-  file_read >> intrisic.at<double>(2,2);
+  file_read >> intrinsic.at<double>(0,0);
+  file_read >> intrinsic.at<double>(0,1);
+  file_read >> intrinsic.at<double>(0,2);
+  file_read >> intrinsic.at<double>(1,0);
+  file_read >> intrinsic.at<double>(1,1);
+  file_read >> intrinsic.at<double>(1,2);
+  file_read >> intrinsic.at<double>(2,0);
+  file_read >> intrinsic.at<double>(2,1);
+  file_read >> intrinsic.at<double>(2,2);
   file_read.close();
 
   // set first frame index
@@ -289,11 +289,47 @@ int main(int argc, char** argv )
       // get F using the good feature matches
       Mat F = findFundamentalMat(features_old, features_new, FM_8POINT);
 
-      // use intrisic parameters to get essential matrix
+      // use intrinsic parameters to get essential matrix
+      Mat E = intrinsic.t()*F*intrinsic;
 
       // normalize using svd
+      Mat w, u, vt, w2;
+      SVD::compute(E, w, u, vt);
+      w2 = Mat::eye(3,3, CV_64F);     // 3x3 identity
+      w2.at<double>(2,2) = 0;         // new normalized singular values
+      E = u * w2 * vt;
 
-      // use recoverPose to get r and t
+      // get focal lengths and principal point
+      double fx = intrinsic.at<double>(0,0);
+      double fy = intrinsic.at<double>(1,1);
+      double cx = intrinsic.at<double>(0,2);
+      double cy = intrinsic.at<double>(1,2);
+
+      // decomposing the essential matrix gives us 4 combinations of possible
+      // R and T; recoverPose does the cheirality check to get the correct one
+      Mat R, T;
+      recoverPose(E, features_old, features_new, R, T, fx, Point2f(cx, cy));
+
+      // bottom row of Tk matrix
+      Mat lower(Size(4,1), CV_64FC1);
+      lower.at<double>(0,0) = 0;
+      lower.at<double>(0,1) = 0;
+      lower.at<double>(0,2) = 0;
+      lower.at<double>(0,3) = 1;
+
+      // Get Tk for frame and frame_old
+      Mat Tkkk;
+      hconcat(R, T, Tkkk);
+      vconcat(Tkkk, lower, Tkkk);
+
+      std::cout << "---" << std::endl;
+      std::cout << R << std::endl;
+      std::cout << T << std::endl;
+      std::cout << lower << std::endl;
+      std::cout << Tkkk << std::endl;
+
+
+
 
 
 
