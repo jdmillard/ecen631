@@ -110,7 +110,6 @@ int main(int argc, char** argv )
   Mat intrinsic (Size(3,3), CV_64FC1);
   std::ifstream file_read;
   file_read.open(path);
-  double testing;
   file_read >> intrinsic.at<double>(0,0);
   file_read >> intrinsic.at<double>(0,1);
   file_read >> intrinsic.at<double>(0,2);
@@ -126,11 +125,11 @@ int main(int argc, char** argv )
   int frame_idx = 0;
 
   std::ofstream save;
-  save.open("rt.txt"); // eventually switch to rt.txt
+  save.open("rt.txt");
 
   Mat frame;
   Mat frame_old;
-  Mat Ck;
+  Mat Ck = Mat::eye(4,4, CV_64F);
 
   if (live_plotting)
   {
@@ -144,8 +143,9 @@ int main(int argc, char** argv )
   std::vector<uchar> 										features_mask;
   std::vector<cv::Point2f>							features_old;
   std::vector<cv::Point2f>							features_new;
-  //std::vector<cv::Point2f>							features_new_u;
-  std::vector<std::vector<cv::Point2f>> features_all;
+  std::vector<cv::Point2f>							features_old_u;
+  std::vector<cv::Point2f>							features_new_u;
+  //std::vector<std::vector<cv::Point2f>> features_all;
   //std::vector<std::vector<cv::Point2f>> features_all_u;
 
   // <<<<<<<<<<
@@ -243,13 +243,15 @@ int main(int argc, char** argv )
 
       features_mask.clear();
       features_new.clear();
-      bool edge = false;
-      // template matching
-      int d_wind = 81; // window dimension
-      int d_temp = 31; // template dimension
+
 
       if (intensity)
       {
+        bool edge = false;
+        // template matching
+        int d_wind = 81; // window dimension
+        int d_temp = 31; // template dimension
+
         for (int i=0; i<features_old.size(); i++)
         {
 
@@ -316,17 +318,18 @@ int main(int argc, char** argv )
 
         features_mask.clear();
         std::vector<float> err;
-        TermCriteria criteria = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 0.01);
+        //TermCriteria criteria = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 0.01);
 
-        double minEigThreshold = 0.001; // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
+        //double minEigThreshold = 0.01; // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
         calcOpticalFlowPyrLK	(	frame_old,     frame,
                                 features_old,  features_new,
-                                features_mask, err,
+                                features_mask, err );  /*,
                                 Size(30,30),   5,     criteria, // the 5 is the max levels, increasing improves performance
-                                OPTFLOW_LK_GET_MIN_EIGENVALS, minEigThreshold);
+                                OPTFLOW_LK_GET_MIN_EIGENVALS, minEigThreshold);*/
 
         // clean up
-        cleanFeatures2(features_old, features_new, features_mask, err, minEigThreshold);
+        //cleanFeatures2(features_old, features_new, features_mask, err, minEigThreshold);
+        cleanFeatures(features_old, features_new, features_mask);
 
 
       }
@@ -334,29 +337,32 @@ int main(int argc, char** argv )
 
       // now we have features_new and features_old, cleaned up
 
-      // undistort ??? (would require logic to find parameters)
+      // undistort
+      //undistortPoints(features_old, features_old_u, intrinsic, noArray(), noArray(), noArray()); // try with or without intrinsic again also try putting this before F
+      //undistortPoints(features_new, features_new_u, intrinsic, noArray(), noArray(), noArray()); // try with or without intrinsic again also try putting this before F
 
       // use findFundamentalMat to locate the outlier feature points
-      int ep_dist = 0.1; // acceptable distance from epipolar line <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
-      double confidence = 0.999; // confidence of correct F matrix (0-1) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO
+      int ep_dist = 0.2; // acceptable distance from epipolar line <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
+      double confidence = 0.99; // confidence of correct F matrix (0-1) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO
       features_mask.clear();
-      Mat F_outlier = findFundamentalMat(features_old, features_new, FM_RANSAC, ep_dist, confidence, features_mask);
+      Mat F1 = findFundamentalMat(features_old, features_new, FM_RANSAC, ep_dist, confidence, features_mask);
       cleanFeatures(features_old, features_new, features_mask);
-
-      // undistort ?? (need to figure out logic for this and where to undistort) TODO
 
       // get F using the good feature matches << THIS IS EXTRA, COME BACK TO THIS. print both and compare TODO
       Mat F = findFundamentalMat(features_old, features_new, FM_8POINT);
+
+
+
 
       // use intrinsic parameters to get essential matrix
       Mat E = intrinsic.t()*F*intrinsic;
 
       // normalize using svd
-      Mat w, u, vt, w2;
-      SVD::compute(E, w, u, vt);
-      w2 = Mat::eye(3,3, CV_64F);     // 3x3 identity
-      w2.at<double>(2,2) = 0;         // new normalized singular values
-      E = u * w2 * vt;
+      // Mat w, u, vt, w2;
+      // SVD::compute(E, w, u, vt);
+      // w2 = Mat::eye(3,3, CV_64F);     // 3x3 identity
+      // w2.at<double>(2,2) = 0;         // new normalized singular values
+      // E = u * w2 * vt;
 
       // get focal lengths and principal point
       double fx = intrinsic.at<double>(0,0);
@@ -368,6 +374,16 @@ int main(int argc, char** argv )
       // R and T; recoverPose does the cheirality check to get the correct one
       Mat R, T;
       recoverPose(E, features_old, features_new, R, T, fx, Point2f(cx, cy)); // TODO use 1 for fx and 0,0 for center for undistorted points
+
+      //std::cout << T << std::endl;
+      //std::cout << T.at<double>(2,0) << std::endl;
+      if (T.at<double>(2,0) > 0)
+      {
+        //std::cout << T << std::endl;
+        //std::cout << "greater than zero" << std::endl;
+        T = -1* T;
+        //std::cout << T << std::endl;
+      }
 
       // bottom row of Tk matrix
       Mat lower(Size(4,1), CV_64FC1);
@@ -389,19 +405,21 @@ int main(int argc, char** argv )
 
       Tk = Tk.inv();
 
-
       // update Ck
-      if (frame_idx==1)
-      {
-        // algorithm is on the second frame
-        // which is the first to have a rotation/translation
-        Ck = Tk;
-      }
-      else
-      {
-        // update all current transformation with the current
-        Ck = Ck*Tk;
-      }
+      Ck = Ck*Tk;
+
+      // // update Ck
+      // if (frame_idx==1)
+      // {
+      //   // algorithm is on the second frame
+      //   // which is the first to have a rotation/translation
+      //   Ck = Tk;
+      // }
+      // else
+      // {
+      //   // update all current transformation with the current
+      //   Ck = Ck*Tk;
+      // }
 
       //std::cout << "---" << std::endl;
       //std::cout << Ck << std::endl;
