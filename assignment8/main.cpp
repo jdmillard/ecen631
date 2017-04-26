@@ -316,9 +316,8 @@ int main(int argc, char** argv )
     }
 
     // use current frame to refresh features
-
-
-    // REMOVE THIS IF STATEMENT AND GENERATE NEW FEATURES EVERY TIME
+    /*
+    // used for no refresh (for testing feature tracking)
     if (frame_idx==0)
     {
       // find goodFeaturesToTrack and overwrite features_old
@@ -336,6 +335,16 @@ int main(int argc, char** argv )
       features_old.clear();
       features_old = features_new;
     }
+    */
+    features_old.clear();
+    int max_points = 1000;
+    double quality = 0.01;
+    double min_dist = 10;
+    Mat mask;
+    int blockSize = 3;
+    bool useHarris = false;
+    double k = 0.04;
+    goodFeaturesToTrack(frame, features_old, max_points, quality, min_dist, mask, blockSize, useHarris, k);
 
 
     // remember this frame as the old one next iteration
@@ -345,10 +354,8 @@ int main(int argc, char** argv )
     Mat frame_draw = frame.clone();
     drawFeatures(frame_draw, features_old);
 
-
-    // display image
+    // display the image with drawn features
     imshow("Task 1 A", frame_draw);
-
 
     // wait for key input from user
     int key = waitKey();
