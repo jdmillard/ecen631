@@ -7,10 +7,9 @@ import numpy as np
 
 A = np.loadtxt('build/rt.txt')
 #A = np.loadtxt('rt.txt') # <<< <<< this is the one to use for the C++ # <<<<<<<<<<<<<<<<<<<<<<<<<<<
-print(A.shape)
-print(A.shape[0])
-
 # now A is a Nx12, the 12 of 1 row create R and T
+
+T_all = np.zeros((3,1))
 
 for i in range(0, A.shape[0]):
     # A[i] is the current row
@@ -27,26 +26,25 @@ for i in range(0, A.shape[0]):
     # get the current T
     T = Tk[0:3, 3]
     T = np.reshape(T, (3,1), 1) # 1 means fill column first
-    print('---')
-    print(T)
+    #print('---')
+    #print(T)
 
-# it appears that the first value of T is the x in the truth plot
-# it appears that the 3rd value of T is the y in the truth plot
-# further, it seems that the translations are accumulative, not frame-to-frame
-# so each Tk is the transformation from the beginning to current
+    # update the full set of T_all
+    T_all = np.hstack((T_all, T))
+    #print('---')
+    #print(T_all)
 
+# the 1st value of T is the x in the truth plot
+# the 3rd value of T is the y in the truth plot
+# translations are accumulative, not frame-to-frame
+# each Tk is the transformation from the beginning to current
 
+plt.plot(T_all[0,:], T_all[2,:])
 
-# use an initial point (0, 0) and R and T to propagate the trajectory
-# then plot
-
-t = np.arange(0.0, 2.0, 0.01)
-s = 1 + np.sin(2*np.pi*t)
-plt.plot(t, s)
-
-plt.xlabel('time (s)')
-plt.ylabel('voltage (mV)')
-plt.title('About as simple as it gets, folks')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('visual odometry trajectory')
 plt.grid(True)
-#plt.savefig("test.png")
+plt.axis('equal')
+#plt.savefig('trajectory.png')
 plt.show()

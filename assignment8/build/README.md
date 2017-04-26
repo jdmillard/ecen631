@@ -5,6 +5,7 @@ This assignment explores visual odometry.
 There should be "practice", "hall", and "urban" folders containing sequential images and in the case of practice some camera parameters. These can be downloaded from:
 https://learningsuite.byu.edu/plugins/Upload/fileDownload.php?fileId=70bc46e1-UhXh-hNbJ-gLLh-wW1897bd8402
 https://drive.google.com/file/d/0BxkJlgmKnD54WFBhdzVIZ25mdzQ/view
+https://learningsuite.byu.edu/plugins/Upload/fileDownload.php?fileId=221d9283-BWOd-EeKx-2kjP-ZR0b42898dfc
 
 From the build directory, these commands should build and run a given assignment:
 ```
