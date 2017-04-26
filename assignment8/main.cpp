@@ -74,6 +74,10 @@ int main(int argc, char** argv )
       // write the txt file with r and t
       // confirm that it is written, and closed
 
+      // for now, assume a text file named rt.txt was just generated
+      // if it's not there, copy the one in "practice" which is a downloaded
+      // folder, not commited
+
       // display truth (if exists)
 
       // call c++ plotting wrapper
@@ -84,6 +88,10 @@ int main(int argc, char** argv )
       PySys_SetArgv(argc, argv); // must call this to get sys.argv and relative imports
       PyRun_SimpleString("import matplotlib.pyplot as plt \n"
                          "import numpy as np \n"
+                         "A = np.loadtxt('rt.txt') \n"
+                         "print(A.shape) \n"
+                         "print(A[0][0]) \n"
+                         "print(A[0][1]) \n"
                          "t = np.arange(0.0, 2.0, 0.01) \n"
                          "s = 1 + np.sin(2*np.pi*t) \n"
                          "plt.plot(t, s) \n"
