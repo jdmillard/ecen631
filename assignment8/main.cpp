@@ -15,18 +15,14 @@ int main(int argc, char** argv )
   bool feed = true;
 
   // whether or not to use practice images
-  bool practice = true;
+  std::string set;
+  set = "practice";
+  //set = "hall";
+  //set = "urban";
 
-  // set first frame index according to dataset naming
-  int frame_idx;
-  if(practice)
-  {
-    frame_idx = 0;
-  }
-  else
-  {
-    frame_idx = 1;
-  }
+
+  // set first frame index
+  int frame_idx = 0;
 
   // initialize frame and display window
   Mat frame;
@@ -44,13 +40,21 @@ int main(int argc, char** argv )
     // get path of current next image
     std::stringstream path1;
     std::string       path2;
-    if(practice)
+    if(set == "practice")
     {
       path1 << "practice/VO Practice Sequence/" << std::setw(6) << std::setfill('0') << frame_idx << ".png";
     }
+    else if (set == "hall")
+    {
+      path1 << "hall/BYU Hallway Sequence/" << std::setw(6) << std::setfill('0') << frame_idx << ".png";
+    }
+    else if (set == "urban")
+    {
+      path1 << "urban/UrbanWithBump." << std::setw(4) << std::setfill('0') << frame_idx+1 << ".tif";
+    }
     else
     {
-      path1 << "urban/UrbanWithBump." << std::setw(4) << std::setfill('0') << frame_idx << ".png";
+      printf("no image sequence selected \n");
     }
     path2 = path1.str();
 
