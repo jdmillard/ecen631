@@ -79,9 +79,10 @@ int main(int argc, char** argv )
 
   // determines when to stop the algorithm
   bool feed = true;
-  bool live_plotting = true;
+  bool live_plotting = false;
   bool intensity = false;
   bool lkflow = true;
+  int ceiling = 10000;
 
   // whether or not to use practice images
   std::string set;
@@ -180,7 +181,7 @@ int main(int argc, char** argv )
     frame = imread( path2, CV_LOAD_IMAGE_GRAYSCALE);
 
     // test image validity
-    if (!frame.data || frame_idx>20)
+    if (!frame.data || frame_idx>ceiling)
     {
       printf("end of image sequence \n");
 
@@ -317,8 +318,7 @@ int main(int argc, char** argv )
         std::vector<float> err;
         TermCriteria criteria = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 0.01);
 
-        int flags = 0;
-        double minEigThreshold = 0.001;
+        double minEigThreshold = 0.001; // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
         calcOpticalFlowPyrLK	(	frame_old,     frame,
                                 features_old,  features_new,
                                 features_mask, err,
@@ -337,13 +337,13 @@ int main(int argc, char** argv )
       // undistort ??? (would require logic to find parameters)
 
       // use findFundamentalMat to locate the outlier feature points
-      int ep_dist = 0.1; // acceptable distance from epipolar line
-      double confidence = 0.999; // confidence of correct F matrix (0-1)
+      int ep_dist = 0.1; // acceptable distance from epipolar line <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
+      double confidence = 0.99; // confidence of correct F matrix (0-1) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO
       features_mask.clear();
       Mat F_outlier = findFundamentalMat(features_old, features_new, FM_RANSAC, ep_dist, confidence, features_mask);
       cleanFeatures(features_old, features_new, features_mask);
 
-      // undistort ?? (need to figure out logic for this and where to undistort)
+      // undistort ?? (need to figure out logic for this and where to undistort) TODO
 
       // get F using the good feature matches << THIS IS EXTRA, COME BACK TO THIS. print both and compare TODO
       Mat F = findFundamentalMat(features_old, features_new, FM_8POINT);
@@ -367,7 +367,7 @@ int main(int argc, char** argv )
       // decomposing the essential matrix gives us 4 combinations of possible
       // R and T; recoverPose does the cheirality check to get the correct one
       Mat R, T;
-      recoverPose(E, features_old, features_new, R, T, fx, Point2f(cx, cy));
+      recoverPose(E, features_old, features_new, R, T, fx, Point2f(cx, cy)); // TODO use 1 for fx and 0,0 for center
 
       // bottom row of Tk matrix
       Mat lower(Size(4,1), CV_64FC1);
@@ -445,6 +445,7 @@ int main(int argc, char** argv )
 
     // use current frame to refresh features
 
+    /*
     // used for no refresh (for testing feature tracking)
     if (frame_idx==0)
     {
@@ -463,17 +464,16 @@ int main(int argc, char** argv )
       features_old.clear();
       features_old = features_new;
     }
-    /*
+    */
     features_old.clear();
-    int max_points = 1000;
-    double quality = 0.01;
+    int max_points = 300;
+    double quality = 0.001; // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     double min_dist = 10;
-    Mat mask;
+    //Mat mask;
     int blockSize = 3;
     bool useHarris = false;
     double k = 0.04;
-    goodFeaturesToTrack(frame, features_old, max_points, quality, min_dist, mask, blockSize, useHarris, k);
-    */
+    goodFeaturesToTrack(frame, features_old, max_points, quality, min_dist);  // mask, blockSize, useHarris, k
 
 
     // remember this frame as the old one next iteration
