@@ -322,7 +322,7 @@ int main(int argc, char** argv )
         calcOpticalFlowPyrLK	(	frame_old,     frame,
                                 features_old,  features_new,
                                 features_mask, err,
-                                Size(31,31),   5,     criteria, // the 5 is the max levels, increasing improves performance
+                                Size(30,30),   5,     criteria, // the 5 is the max levels, increasing improves performance
                                 OPTFLOW_LK_GET_MIN_EIGENVALS, minEigThreshold);
 
         // clean up
@@ -338,7 +338,7 @@ int main(int argc, char** argv )
 
       // use findFundamentalMat to locate the outlier feature points
       int ep_dist = 0.1; // acceptable distance from epipolar line <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
-      double confidence = 0.99; // confidence of correct F matrix (0-1) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO
+      double confidence = 0.999; // confidence of correct F matrix (0-1) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO
       features_mask.clear();
       Mat F_outlier = findFundamentalMat(features_old, features_new, FM_RANSAC, ep_dist, confidence, features_mask);
       cleanFeatures(features_old, features_new, features_mask);
@@ -367,7 +367,7 @@ int main(int argc, char** argv )
       // decomposing the essential matrix gives us 4 combinations of possible
       // R and T; recoverPose does the cheirality check to get the correct one
       Mat R, T;
-      recoverPose(E, features_old, features_new, R, T, fx, Point2f(cx, cy)); // TODO use 1 for fx and 0,0 for center
+      recoverPose(E, features_old, features_new, R, T, fx, Point2f(cx, cy)); // TODO use 1 for fx and 0,0 for center for undistorted points
 
       // bottom row of Tk matrix
       Mat lower(Size(4,1), CV_64FC1);
@@ -466,13 +466,13 @@ int main(int argc, char** argv )
     }
     */
     features_old.clear();
-    int max_points = 300;
-    double quality = 0.001; // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    int max_points = 500;
+    double quality = 0.01; // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     double min_dist = 10;
     //Mat mask;
-    int blockSize = 3;
-    bool useHarris = false;
-    double k = 0.04;
+    //int blockSize = 3;
+    //bool useHarris = false;
+    //double k = 0.04;
     goodFeaturesToTrack(frame, features_old, max_points, quality, min_dist);  // mask, blockSize, useHarris, k
 
 
