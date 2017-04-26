@@ -62,20 +62,40 @@ int main(int argc, char** argv )
   //set = "hall";
   //set = "urban";
 
-  // decide what to do about camera parameters based on selected image sequence
+  // import camera parameters
+  // choose path to parameters based on image set
+  std::string path;
+  if(set == "practice")
+  {
+    path = "practice/VO Practice Camera Parameters.txt";
+  }
+  else if (set == "hall")
+  {
+    path = "hall/BYU Hallway Camera Parameters.txt";
+  }
+  else
+  {
+    // no parameters supplied, use the practice ones
+    path = "practice/VO Practice Camera Parameters.txt";
+  }
+
+  Mat intrisic (Size(3,3), CV_64FC1);
+  std::ifstream file_read;
+  file_read.open(path);
+  double testing;
+  file_read >> intrisic.at<double>(0,0);
+  file_read >> intrisic.at<double>(0,1);
+  file_read >> intrisic.at<double>(0,2);
+  file_read >> intrisic.at<double>(1,0);
+  file_read >> intrisic.at<double>(1,1);
+  file_read >> intrisic.at<double>(1,2);
+  file_read >> intrisic.at<double>(2,0);
+  file_read >> intrisic.at<double>(2,1);
+  file_read >> intrisic.at<double>(2,2);
+  file_read.close();
 
   // set first frame index
   int frame_idx = 0;
-
-  // // set up writing
-  // // Declare what you need
-  // FileStorage file12("some_name.txt", FileStorage::WRITE);
-  // Mat someMatrixOfAnyType(Size(1,1), CV_64FC1);
-  // std::cout << "here" << std::endl;
-  // someMatrixOfAnyType.at<double>(0,0) = 5.1;
-  // std::cout << "here" << std::endl;
-  // // Write to file!
-  // file12 << someMatrixOfAnyType;
 
   std::ofstream save;
   save.open("rt.txt"); // eventually switch to rt.txt
@@ -255,9 +275,26 @@ int main(int argc, char** argv )
 
       // now we have features_new and features_old, cleaned up
 
-      // do RANSAC elimination
+      // undistort ??? (would require logic to find parameters)
 
-      // get F
+      // use findFundamentalMat to locate the outlier feature points
+      int ep_dist = 0.03 * frame.rows; // acceptable distance from epipolar line
+      double confidence = 0.95; // confidence of correct F matrix (0-1)
+      features_mask.clear();
+      Mat F_outlier = findFundamentalMat(features_old, features_new, FM_RANSAC, ep_dist, confidence, features_mask);
+      cleanFeatures(features_old, features_new, features_mask);
+
+      // undistort ?? (need to figure out logic for this and where to undistort)
+
+      // get F using the good feature matches
+      Mat F = findFundamentalMat(features_old, features_new, FM_8POINT);
+
+      // use intrisic parameters to get essential matrix
+
+      // normalize using svd
+
+      // use recoverPose to get r and t
+
 
 
 
