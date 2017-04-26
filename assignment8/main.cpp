@@ -104,6 +104,7 @@ int main(int argc, char** argv )
   // initialize frame and display window
   Mat frame;
   Mat frame_old;
+  Mat Ck;
   namedWindow("Task 1 A", CV_WINDOW_AUTOSIZE);
   moveWindow("Task 1 A", 50, 50);
 
@@ -318,15 +319,34 @@ int main(int argc, char** argv )
       lower.at<double>(0,3) = 1;
 
       // Get Tk for frame and frame_old
-      Mat Tkkk;
-      hconcat(R, T, Tkkk);
-      vconcat(Tkkk, lower, Tkkk);
+      Mat Tk;
+      hconcat(R, T, Tk);
+      vconcat(Tk, lower, Tk);
+
+      //std::cout << "---" << std::endl;
+      //std::cout << R << std::endl;
+      //std::cout << T << std::endl;
+      //std::cout << lower << std::endl;
+      //std::cout << Tk << std::endl;
+
+      Tk = Tk.inv();
+
+
+      // update Ck
+      if (frame_idx==1)
+      {
+        // algorithm is on the second frame
+        // which is the first to have a rotation/translation
+        Ck = Tk;
+      }
+      else
+      {
+        // update all current transformation with the current
+        Ck = Ck*Tk;
+      }
 
       std::cout << "---" << std::endl;
-      std::cout << R << std::endl;
-      std::cout << T << std::endl;
-      std::cout << lower << std::endl;
-      std::cout << Tkkk << std::endl;
+      std::cout << Ck << std::endl;
 
 
 
@@ -343,49 +363,42 @@ int main(int argc, char** argv )
 
 
 
-
-
-      // find fundamental matrix
-
-      // get r and t
-
-      // generate Tk
 
 
       // output the current Tk matrix to the rt.txt if not the first frame
 
       // create DUMMY Tk DUMMY Tk DUMMY Tk DUMMY Tk DUMMY Tk
-      Mat Tk(Size(4,4), CV_64FC1);
-      Tk.at<double>(0,0) = 1;
-      Tk.at<double>(0,1) = 2;
-      Tk.at<double>(0,2) = 3;
-      Tk.at<double>(0,3) = 4;
-      Tk.at<double>(1,0) = 5;
-      Tk.at<double>(1,1) = 6;
-      Tk.at<double>(1,2) = 7;
-      Tk.at<double>(1,3) = 8;
-      Tk.at<double>(2,0) = 9;
-      Tk.at<double>(2,1) = 10;
-      Tk.at<double>(2,2) = 11;
-      Tk.at<double>(2,3) = 12;
-      Tk.at<double>(3,0) = 13;
-      Tk.at<double>(3,1) = 14;
-      Tk.at<double>(3,2) = 15;
-      Tk.at<double>(3,3) = 16;
+      //Mat Tk(Size(4,4), CV_64FC1);
+      //Tk.at<double>(0,0) = 1;
+      //Tk.at<double>(0,1) = 2;
+      //Tk.at<double>(0,2) = 3;
+      //Tk.at<double>(0,3) = 4;
+      //Tk.at<double>(1,0) = 5;
+      //Tk.at<double>(1,1) = 6;
+      //Tk.at<double>(1,2) = 7;
+      //Tk.at<double>(1,3) = 8;
+      //Tk.at<double>(2,0) = 9;
+      //Tk.at<double>(2,1) = 10;
+      //Tk.at<double>(2,2) = 11;
+      //Tk.at<double>(2,3) = 12;
+      //Tk.at<double>(3,0) = 13;
+      //Tk.at<double>(3,1) = 14;
+      //Tk.at<double>(3,2) = 15;
+      //Tk.at<double>(3,3) = 16;
 
       // save dummy Tk
-      save << Tk.at<double>(0,0) << "\t";
-      save << Tk.at<double>(0,1) << "\t";
-      save << Tk.at<double>(0,2) << "\t";
-      save << Tk.at<double>(0,3) << "\t";
-      save << Tk.at<double>(1,0) << "\t";
-      save << Tk.at<double>(1,1) << "\t";
-      save << Tk.at<double>(1,2) << "\t";
-      save << Tk.at<double>(1,3) << "\t";
-      save << Tk.at<double>(2,0) << "\t";
-      save << Tk.at<double>(2,1) << "\t";
-      save << Tk.at<double>(2,2) << "\t";
-      save << Tk.at<double>(2,3) << "\n";
+      save << Ck.at<double>(0,0) << "\t";
+      save << Ck.at<double>(0,1) << "\t";
+      save << Ck.at<double>(0,2) << "\t";
+      save << Ck.at<double>(0,3) << "\t";
+      save << Ck.at<double>(1,0) << "\t";
+      save << Ck.at<double>(1,1) << "\t";
+      save << Ck.at<double>(1,2) << "\t";
+      save << Ck.at<double>(1,3) << "\t";
+      save << Ck.at<double>(2,0) << "\t";
+      save << Ck.at<double>(2,1) << "\t";
+      save << Ck.at<double>(2,2) << "\t";
+      save << Ck.at<double>(2,3) << "\n";
     }
 
     // use current frame to refresh features
