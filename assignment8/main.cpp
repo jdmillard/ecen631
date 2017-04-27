@@ -79,7 +79,7 @@ int main(int argc, char** argv )
 
   // determines when to stop the algorithm
   bool feed = true;
-  bool live_plotting = false;
+  bool live_plotting = true;
   bool intensity = false;
   bool lkflow = true;
   int ceiling = 10000;
@@ -226,19 +226,10 @@ int main(int argc, char** argv )
 
 
 
-    // track features from previous frame to here
-    // get rotation, translation for the current index
-    // store transformation, get cumulative transformation and store in rt.txt
-    // get new features with gftt for the next frame
-
-
-
     if (frame_idx!=0)
     {
       // track features
       // features_old are the feature locations for the last frame
-
-
 
 
       features_mask.clear();
@@ -318,18 +309,18 @@ int main(int argc, char** argv )
 
         features_mask.clear();
         std::vector<float> err;
-        //TermCriteria criteria = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 0.01);
+        TermCriteria criteria = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 0.01);
 
-        //double minEigThreshold = 0.01; // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
+        double minEigThreshold = 0.001; // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
         calcOpticalFlowPyrLK	(	frame_old,     frame,
                                 features_old,  features_new,
-                                features_mask, err );  /*,
-                                Size(30,30),   5,     criteria, // the 5 is the max levels, increasing improves performance
-                                OPTFLOW_LK_GET_MIN_EIGENVALS, minEigThreshold);*/
+                                features_mask, err ,
+                                Size(30,30),   5,     criteria,
+                                OPTFLOW_LK_GET_MIN_EIGENVALS, minEigThreshold);
 
         // clean up
-        //cleanFeatures2(features_old, features_new, features_mask, err, minEigThreshold);
-        cleanFeatures(features_old, features_new, features_mask);
+        cleanFeatures2(features_old, features_new, features_mask, err, minEigThreshold);
+        //cleanFeatures(features_old, features_new, features_mask);
 
 
       }
@@ -337,32 +328,31 @@ int main(int argc, char** argv )
 
       // now we have features_new and features_old, cleaned up
 
-      // undistort
-      //undistortPoints(features_old, features_old_u, intrinsic, noArray(), noArray(), noArray()); // try with or without intrinsic again also try putting this before F
-      //undistortPoints(features_new, features_new_u, intrinsic, noArray(), noArray(), noArray()); // try with or without intrinsic again also try putting this before F
-
       // use findFundamentalMat to locate the outlier feature points
-      int ep_dist = 0.2; // acceptable distance from epipolar line <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
-      double confidence = 0.99; // confidence of correct F matrix (0-1) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO
+      int ep_dist = 0.1; // acceptable distance from epipolar line <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
+      double confidence = 0.999; // confidence of correct F matrix (0-1) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO
       features_mask.clear();
-      Mat F1 = findFundamentalMat(features_old, features_new, FM_RANSAC, ep_dist, confidence, features_mask);
+      Mat F = findFundamentalMat(features_old, features_new, FM_RANSAC, ep_dist, confidence, features_mask);
       cleanFeatures(features_old, features_new, features_mask);
 
-      // get F using the good feature matches << THIS IS EXTRA, COME BACK TO THIS. print both and compare TODO
-      Mat F = findFundamentalMat(features_old, features_new, FM_8POINT);
 
+      //// get F using the good feature matches << THIS IS EXTRA, COME BACK TO THIS. print both and compare TODO
+      //Mat F = findFundamentalMat(features_old, features_new, FM_8POINT);
 
+      // undistort
+      undistortPoints(features_old, features_old_u, intrinsic, noArray(), noArray(), intrinsic); // try with or without intrinsic again also try putting this before F
+      undistortPoints(features_new, features_new_u, intrinsic, noArray(), noArray(), intrinsic); // try with or without intrinsic again also try putting this before F
 
 
       // use intrinsic parameters to get essential matrix
       Mat E = intrinsic.t()*F*intrinsic;
 
       // normalize using svd
-      // Mat w, u, vt, w2;
-      // SVD::compute(E, w, u, vt);
-      // w2 = Mat::eye(3,3, CV_64F);     // 3x3 identity
-      // w2.at<double>(2,2) = 0;         // new normalized singular values
-      // E = u * w2 * vt;
+      Mat w, u, vt, w2;
+      SVD::compute(E, w, u, vt, 0);
+      w2 = Mat::eye(3,3, CV_64F);     // 3x3 identity
+      w2.at<double>(2,2) = 0;         // new normalized singular values
+      E = u * w2 * vt;
 
       // get focal lengths and principal point
       double fx = intrinsic.at<double>(0,0);
@@ -373,17 +363,40 @@ int main(int argc, char** argv )
       // decomposing the essential matrix gives us 4 combinations of possible
       // R and T; recoverPose does the cheirality check to get the correct one
       Mat R, T;
-      recoverPose(E, features_old, features_new, R, T, fx, Point2f(cx, cy)); // TODO use 1 for fx and 0,0 for center for undistorted points
+      //recoverPose(E, features_old_u, features_new_u, R, T, fx, Point2f(cx, cy)); // TODO use 1 for fx and 0,0 for center for undistorted points
+      recoverPose(E, features_old_u, features_new_u, R, T, 1.0, Point2f(0, 0), noArray());
 
       //std::cout << T << std::endl;
       //std::cout << T.at<double>(2,0) << std::endl;
-      if (T.at<double>(2,0) > 0)
+      if (T.at<double>(2) > 0)
       {
-        //std::cout << T << std::endl;
-        //std::cout << "greater than zero" << std::endl;
-        T = -1* T;
-        //std::cout << T << std::endl;
+       //std::cout << T << std::endl;
+       //std::cout << "greater than zero" << std::endl;
+       T = -1* T;
+       //std::cout << T << std::endl;
       }
+
+
+      if (R.at<double>(0,0) < 0 || R.at<double>(1,1) < 0 || R.at<double>(2,2) < 0)
+      {
+        // the R was poorly resolved from recoverPose
+        // set it to identity
+        R = Mat::eye(3,3, CV_64F);
+      }
+
+
+      // figure out what is going on with R
+
+      if (frame_idx > 350 && frame_idx < 370)
+      {
+        std::cout << "---" << std::endl;
+        std::cout << frame_idx << std::endl;
+        std::cout << R << std::endl;
+        std::cout << T << std::endl;
+      }
+
+
+      // scale t here TODO
 
       // bottom row of Tk matrix
       Mat lower(Size(4,1), CV_64FC1);
@@ -403,50 +416,16 @@ int main(int argc, char** argv )
       //std::cout << lower << std::endl;
       //std::cout << Tk << std::endl;
 
-      Tk = Tk.inv();
+      Tk = Tk.inv(DECOMP_LU);
 
       // update Ck
       Ck = Ck*Tk;
 
-      // // update Ck
-      // if (frame_idx==1)
-      // {
-      //   // algorithm is on the second frame
-      //   // which is the first to have a rotation/translation
-      //   Ck = Tk;
-      // }
-      // else
-      // {
-      //   // update all current transformation with the current
-      //   Ck = Ck*Tk;
-      // }
-
       //std::cout << "---" << std::endl;
       //std::cout << Ck << std::endl;
 
-
       // output the current Ck matrix to the rt.txt if not the first frame
 
-      // create DUMMY Tk DUMMY Tk DUMMY Tk DUMMY Tk DUMMY Tk
-      //Mat Tk(Size(4,4), CV_64FC1);
-      //Tk.at<double>(0,0) = 1;
-      //Tk.at<double>(0,1) = 2;
-      //Tk.at<double>(0,2) = 3;
-      //Tk.at<double>(0,3) = 4;
-      //Tk.at<double>(1,0) = 5;
-      //Tk.at<double>(1,1) = 6;
-      //Tk.at<double>(1,2) = 7;
-      //Tk.at<double>(1,3) = 8;
-      //Tk.at<double>(2,0) = 9;
-      //Tk.at<double>(2,1) = 10;
-      //Tk.at<double>(2,2) = 11;
-      //Tk.at<double>(2,3) = 12;
-      //Tk.at<double>(3,0) = 13;
-      //Tk.at<double>(3,1) = 14;
-      //Tk.at<double>(3,2) = 15;
-      //Tk.at<double>(3,3) = 16;
-
-      // save dummy Tk
       save << Ck.at<double>(0,0) << "\t";
       save << Ck.at<double>(0,1) << "\t";
       save << Ck.at<double>(0,2) << "\t";
@@ -507,7 +486,7 @@ int main(int argc, char** argv )
       imshow("Task 1 A", frame_draw);
 
       // wait for key input from user
-      int key = waitKey();
+      int key = waitKey(1);
       if (key == 110) {
         // the 'n' (next) key was pressed
       } else if (key == 27) {
