@@ -86,8 +86,8 @@ int main(int argc, char** argv )
 
   // whether or not to use practice images
   std::string set;
-  set = "practice";
-  //set = "hall";
+  //set = "practice";
+  set = "hall";
   //set = "urban";
 
   // import camera parameters
@@ -129,7 +129,14 @@ int main(int argc, char** argv )
 
   Mat frame;
   Mat frame_old;
+  Mat R = Mat::eye(3,3, CV_64F);
+  Mat T(Size(1,3), CV_64F);
+  T.at<double>(0,0) = 0;
+  T.at<double>(0,1) = 0;
+  T.at<double>(0,2) = 0;
   Mat Ck = Mat::eye(4,4, CV_64F);
+
+
 
   if (live_plotting)
   {
@@ -315,7 +322,7 @@ int main(int argc, char** argv )
         calcOpticalFlowPyrLK	(	frame_old,     frame,
                                 features_old,  features_new,
                                 features_mask, err ,
-                                Size(30,30),   5,     criteria,
+                                Size(31,31),   5,     criteria,
                                 OPTFLOW_LK_GET_MIN_EIGENVALS, minEigThreshold);
 
         // clean up
@@ -326,77 +333,79 @@ int main(int argc, char** argv )
       }
 
 
+
       // now we have features_new and features_old, cleaned up
-
-      // use findFundamentalMat to locate the outlier feature points
-      int ep_dist = 0.1; // acceptable distance from epipolar line <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
-      double confidence = 0.999; // confidence of correct F matrix (0-1) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO
-      features_mask.clear();
-      Mat F = findFundamentalMat(features_old, features_new, FM_RANSAC, ep_dist, confidence, features_mask);
-      cleanFeatures(features_old, features_new, features_mask);
-
-
-      //// get F using the good feature matches << THIS IS EXTRA, COME BACK TO THIS. print both and compare TODO
-      //Mat F = findFundamentalMat(features_old, features_new, FM_8POINT);
-
-      // undistort
-      undistortPoints(features_old, features_old_u, intrinsic, noArray(), noArray(), intrinsic); // try with or without intrinsic again also try putting this before F
-      undistortPoints(features_new, features_new_u, intrinsic, noArray(), noArray(), intrinsic); // try with or without intrinsic again also try putting this before F
-
-
-      // use intrinsic parameters to get essential matrix
-      Mat E = intrinsic.t()*F*intrinsic;
-
-      // normalize using svd
-      Mat w, u, vt, w2;
-      SVD::compute(E, w, u, vt, 0);
-      w2 = Mat::eye(3,3, CV_64F);     // 3x3 identity
-      w2.at<double>(2,2) = 0;         // new normalized singular values
-      E = u * w2 * vt;
-
-      // get focal lengths and principal point
-      double fx = intrinsic.at<double>(0,0);
-      double fy = intrinsic.at<double>(1,1);
-      double cx = intrinsic.at<double>(0,2);
-      double cy = intrinsic.at<double>(1,2);
-
-      // decomposing the essential matrix gives us 4 combinations of possible
-      // R and T; recoverPose does the cheirality check to get the correct one
-      Mat R, T;
-      //recoverPose(E, features_old_u, features_new_u, R, T, fx, Point2f(cx, cy)); // TODO use 1 for fx and 0,0 for center for undistorted points
-      recoverPose(E, features_old_u, features_new_u, R, T, 1.0, Point2f(0, 0), noArray());
-
-      //std::cout << T << std::endl;
-      //std::cout << T.at<double>(2,0) << std::endl;
-      if (T.at<double>(2) > 0)
+      if (features_new.size() < 30)
       {
-       //std::cout << T << std::endl;
-       //std::cout << "greater than zero" << std::endl;
-       T = -1* T;
-       //std::cout << T << std::endl;
-      }
-
-
-      if (R.at<double>(0,0) < 0 || R.at<double>(1,1) < 0 || R.at<double>(2,2) < 0)
-      {
-        // the R was poorly resolved from recoverPose
-        // set it to identity
+        // no features could be tracked
+        // set R to identity (no rotation)
         R = Mat::eye(3,3, CV_64F);
+        // leave T as value from last iteration (propagation)
+
       }
-
-
-      // figure out what is going on with R
-
-      if (frame_idx > 350 && frame_idx < 370)
+      else
       {
-        std::cout << "---" << std::endl;
-        std::cout << frame_idx << std::endl;
-        std::cout << R << std::endl;
-        std::cout << T << std::endl;
+
+        // enough points were tracked
+        // use findFundamentalMat to locate the outlier feature points
+        int ep_dist = 0.1; // acceptable distance from epipolar line <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
+        double confidence = 0.999; // confidence of correct F matrix (0-1) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO
+        features_mask.clear();
+        Mat F = findFundamentalMat(features_old, features_new, FM_RANSAC, ep_dist, confidence, features_mask);
+        cleanFeatures(features_old, features_new, features_mask);
+
+
+        //// get F using the good feature matches << THIS IS EXTRA, COME BACK TO THIS. print both and compare TODO
+        //Mat F = findFundamentalMat(features_old, features_new, FM_8POINT);
+
+        // undistort
+        undistortPoints(features_old, features_old_u, intrinsic, noArray(), noArray(), intrinsic); // try with or without intrinsic again also try putting this before F
+        undistortPoints(features_new, features_new_u, intrinsic, noArray(), noArray(), intrinsic); // try with or without intrinsic again also try putting this before F
+
+
+        // use intrinsic parameters to get essential matrix
+        Mat E = intrinsic.t()*F*intrinsic;
+
+        // normalize using svd
+        Mat w, u, vt, w2;
+        SVD::compute(E, w, u, vt, 0);
+        w2 = Mat::eye(3,3, CV_64F);     // 3x3 identity
+        w2.at<double>(2,2) = 0;         // new normalized singular values
+        E = u * w2 * vt;
+
+        // get focal lengths and principal point
+        double fx = intrinsic.at<double>(0,0);
+        double fy = intrinsic.at<double>(1,1);
+        double cx = intrinsic.at<double>(0,2);
+        double cy = intrinsic.at<double>(1,2);
+
+        // decomposing the essential matrix gives us 4 combinations of possible
+        // R and T; recoverPose does the cheirality check to get the correct one
+
+        //recoverPose(E, features_old_u, features_new_u, R, T, fx, Point2f(cx, cy)); // TODO use 1 for fx and 0,0 for center for undistorted points
+        recoverPose(E, features_old_u, features_new_u, R, T, 1.0, Point2f(0, 0), noArray());
+
+        //std::cout << T << std::endl;
+        //std::cout << T.at<double>(2,0) << std::endl;
+        if (T.at<double>(2) > 0)
+        {
+         //std::cout << T << std::endl;
+         //std::cout << "greater than zero" << std::endl;
+         T = -1* T;
+         //std::cout << T << std::endl;
+        }
+
+
+        if (R.at<double>(0,0) < 0 || R.at<double>(1,1) < 0 || R.at<double>(2,2) < 0)
+        {
+          // the R was poorly resolved from recoverPose
+          // set it to identity
+          R = Mat::eye(3,3, CV_64F);
+        }
+
+
+        // scale t here TODO
       }
-
-
-      // scale t here TODO
 
       // bottom row of Tk matrix
       Mat lower(Size(4,1), CV_64FC1);
