@@ -348,7 +348,7 @@ int main(int argc, char** argv )
 
         // enough points were tracked
         // use findFundamentalMat to locate the outlier feature points
-        int ep_dist = 0.1; // acceptable distance from epipolar line <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
+        int ep_dist = 0.01; // acceptable distance from epipolar line <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<TODO
         double confidence = 0.999; // confidence of correct F matrix (0-1) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO
         features_mask.clear();
         Mat F = findFundamentalMat(features_old, features_new, FM_RANSAC, ep_dist, confidence, features_mask);
@@ -405,6 +405,12 @@ int main(int argc, char** argv )
 
 
         // scale t here TODO
+      }
+
+      // scale T
+      if (set!="practice")
+      {
+        T = 0.8*T;
       }
 
       // bottom row of Tk matrix
