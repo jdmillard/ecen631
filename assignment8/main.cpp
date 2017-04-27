@@ -86,8 +86,8 @@ int main(int argc, char** argv )
 
   // whether or not to use practice images
   std::string set;
-  //set = "practice";
-  set = "hall";
+  set = "practice";
+  //set = "hall";
   //set = "urban";
 
   // import camera parameters
@@ -342,6 +342,8 @@ int main(int argc, char** argv )
         R = Mat::eye(3,3, CV_64F);
         // leave T as value from last iteration (propagation)
 
+        std::cout << "propagating estimate forward without rotation" << std::endl;
+
       }
       else
       {
@@ -401,6 +403,7 @@ int main(int argc, char** argv )
           // the R was poorly resolved from recoverPose
           // set it to identity
           R = Mat::eye(3,3, CV_64F);
+          std::cout << "no rotation used" << std::endl;
         }
 
 
